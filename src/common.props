@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <Copyright>Copyright © 2019 Your Company</Copyright>
+    <Authors>Your Authors</Authors>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <PackageIconUrl>
+    </PackageIconUrl>
+    <PackageProjectUrl>
+    </PackageProjectUrl>
+    <PackageLicenseUrl>
+    </PackageLicenseUrl>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LibraryFramework>netstandard2.0</LibraryFramework>
+    <AppNetCoreFramework>netcoreapp3.0</AppNetCoreFramework>
+    <TestsNetCoreFramework>netcoreapp3.0</TestsNetCoreFramework>
+    <NBenchVersion>1.2.2</NBenchVersion>
+    <XunitVersion>2.4.1</XunitVersion>
+    <TestSdkVersion>16.3.0</TestSdkVersion>
+    <AkkaVersion>1.3.15</AkkaVersion>
+    <PbmVersion>0.6.3</PbmVersion>
+    <FluentAssertionsVersion>5.9.0</FluentAssertionsVersion>
+  </PropertyGroup>
+</Project>

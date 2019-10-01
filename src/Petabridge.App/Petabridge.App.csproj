@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\common.props" />
+
+
+  <PropertyGroup>
+    <TargetFramework>$(AppNetCoreFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <None Remove="app.conf" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Content Include="app.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.Cluster" Version="$(AkkaVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
+    <PackageReference Include="Akka.Bootstrap.Docker">
+      <Version>0.2.1</Version>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
