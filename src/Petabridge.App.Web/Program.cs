@@ -3,26 +3,27 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Configuration;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
 
-namespace Petabridge.App
+namespace Petabridge.App.Web
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            var config = ConfigurationFactory.ParseString(File.ReadAllText("app.conf")).BootstrapFromDocker();
-            var actorSystem = ActorSystem.Create("ClusterSys", config);
-
-            var pbm = PetabridgeCmd.Get(actorSystem);
-            pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(RemoteCommands.Instance);
-            pbm.Start(); // begin listening for PBM management commands
-            
-            await actorSystem.WhenTerminated;
+            CreateHostBuilder(args).Build().Run();
         }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
    
 }
