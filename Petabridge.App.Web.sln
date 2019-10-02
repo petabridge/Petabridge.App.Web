@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{79D71264
 		build.sh = build.sh
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web", "src\Petabridge.App\Petabridge.App.Web.csproj", "{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web", "src\Petabridge.App.Web\Petabridge.App.Web.csproj", "{6186C854-8B2C-4102-8D7A-4B74A61CC91F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web.Tests", "src\Petabridge.App.Tests\Petabridge.App.Web.Tests.csproj", "{C3E29605-EB45-4ACC-9A38-9A885D06847B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web.Tests", "src\Petabridge.App.Web.Tests\Petabridge.App.Web.Tests.csproj", "{0F03312C-5BCB-480F-8C48-30F7EDEDA3D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,14 +21,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C3E29605-EB45-4ACC-9A38-9A885D06847B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3E29605-EB45-4ACC-9A38-9A885D06847B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3E29605-EB45-4ACC-9A38-9A885D06847B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3E29605-EB45-4ACC-9A38-9A885D06847B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6186C854-8B2C-4102-8D7A-4B74A61CC91F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6186C854-8B2C-4102-8D7A-4B74A61CC91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6186C854-8B2C-4102-8D7A-4B74A61CC91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6186C854-8B2C-4102-8D7A-4B74A61CC91F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F03312C-5BCB-480F-8C48-30F7EDEDA3D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F03312C-5BCB-480F-8C48-30F7EDEDA3D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F03312C-5BCB-480F-8C48-30F7EDEDA3D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F03312C-5BCB-480F-8C48-30F7EDEDA3D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
