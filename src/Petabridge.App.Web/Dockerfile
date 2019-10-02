@@ -8,7 +8,8 @@ ENV CLUSTER_PORT "4055"
 
 # 9110 - Petabridge.Cmd
 # 4053 - Akka.Cluster
-EXPOSE 9110 4055
+# 80 - HTTP
+EXPOSE 9110 4055 80
 
 # Install Petabridge.Cmd client so it can be invoked remotely via
 # Docker or K8s 'exec` commands
@@ -18,7 +19,7 @@ RUN dotnet tool install --global pbm
 
 COPY ./bin/Release/netcoreapp3.0/publish/ /app
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.0 AS app
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.0 AS app
 WORKDIR /app
 
 COPY --from=base /app /app
@@ -29,4 +30,4 @@ COPY --from=base /root/.dotnet /root/.dotnet/
 # Needed because https://stackoverflow.com/questions/51977474/install-dotnet-core-tool-dockerfile
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
-CMD ["dotnet", "Petabridge.App.dll"]
+CMD ["dotnet", "Petabridge.App.Web.dll"]
