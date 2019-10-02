@@ -8,7 +8,8 @@ ENV CLUSTER_PORT "4055"
 
 # 9110 - Petabridge.Cmd
 # 4053 - Akka.Cluster
-EXPOSE 9110 4055
+# 80 - HTTP
+EXPOSE 9110 4055 80
 
 # Install Petabridge.Cmd client so it can be invoked remotely via
 # Docker or K8s 'exec` commands
