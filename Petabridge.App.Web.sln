@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{79D71264
 		build.sh = build.sh
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App", "src\Petabridge.App\Petabridge.App.csproj", "{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web", "src\Petabridge.App\Petabridge.App.Web.csproj", "{B8E7E573-2F8D-4D56-B33E-9770BEE62DEC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Tests", "src\Petabridge.App.Tests\Petabridge.App.Tests.csproj", "{C3E29605-EB45-4ACC-9A38-9A885D06847B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Petabridge.App.Web.Tests", "src\Petabridge.App.Tests\Petabridge.App.Web.Tests.csproj", "{C3E29605-EB45-4ACC-9A38-9A885D06847B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Petabridge.App\Petabridge.App.csproj" />
+    <ProjectReference Include="..\Petabridge.App\Petabridge.App.Web.csproj" />
   </ItemGroup>
 
 </Project>
