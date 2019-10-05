@@ -1,17 +1,17 @@
 {
   "author": "Petabridge",
   "classifications": [ "Petabridge", "DocFx", "Tests" ],
-  "name": "Petabridge Akka.Cluster Starter App",
-  "identity": "Petabridge.App", 
-  "description": "A professional .NET Core project setup including build scripts, documentation, unit tests, and performance tests for an Akka.Cluster .NET Core project.",
-  "shortName": "pb-akka-cluster",              
+  "name": "Petabridge ASP.NET Core + Akka.Cluster Starter App",
+  "identity": "Petabridge.App.Web", 
+  "description": "A professional .NET Core project setup including build scripts, documentation, unit tests, and performance tests for an Akka.Cluster and ASP.NET Core project.",
+  "shortName": "pb-akka-web",              
   "groupIdentity": "Petabridge",
   "tags": {
     "language": "C#",                      
     "type": "project"
   },
-  "sourceName": "Petabridge.App",       
-  "primaryOutputs": [ { "path": "Petabridge.App.sln" } ],
-  "defaultName": "Akka.App",
+  "sourceName": "Petabridge.App.Web",       
+  "primaryOutputs": [ { "path": "Petabridge.App.Web.sln" } ],
+  "defaultName": "Akka.App.Web",
   "preferNameDirectory" : "true"
 }
