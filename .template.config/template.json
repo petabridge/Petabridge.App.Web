@@ -5,7 +5,7 @@
   "identity": "Petabridge.App.Web", 
   "description": "A professional .NET Core project setup including build scripts, documentation, unit tests, and performance tests for an Akka.Cluster and ASP.NET Core project.",
   "shortName": "pb-akka-web",              
-  "groupIdentity": "Petabridge",
+  "groupIdentity": "Petabridge.App.Web",
   "tags": {
     "language": "C#",                      
     "type": "project"
