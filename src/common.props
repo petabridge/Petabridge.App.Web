@@ -18,7 +18,7 @@
     <TestsNetCoreFramework>netcoreapp3.0</TestsNetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>
     <XunitVersion>2.4.1</XunitVersion>
-    <TestSdkVersion>16.3.0</TestSdkVersion>
+    <TestSdkVersion>16.4.0</TestSdkVersion>
     <AkkaVersion>1.3.15</AkkaVersion>
     <PbmVersion>0.7.0</PbmVersion>
     <FluentAssertionsVersion>5.9.0</FluentAssertionsVersion>
