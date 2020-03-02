@@ -14,8 +14,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <LibraryFramework>netstandard2.0</LibraryFramework>
-    <AppNetCoreFramework>netcoreapp3.0</AppNetCoreFramework>
-    <TestsNetCoreFramework>netcoreapp3.0</TestsNetCoreFramework>
+    <NetCoreFramework>netcoreapp3.1</NetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>
     <XunitVersion>2.4.1</XunitVersion>
     <TestSdkVersion>16.5.0</TestSdkVersion>

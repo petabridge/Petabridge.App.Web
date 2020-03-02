@@ -11,10 +11,10 @@ NUGET_EXE=$TOOLS_DIR/nuget.exe
 NUGET_URL=https://dist.nuget.org/win-x86-commandline/v4.0.0/nuget.exe
 FAKE_VERSION=4.61.2
 FAKE_EXE=$TOOLS_DIR/FAKE/tools/FAKE.exe
-DOTNET_VERSION=3.0.100
+DOTNET_VERSION=3.1.100
 DOTNET_INSTALLER_URL=https://dot.net/v1/dotnet-install.sh
 DOTNET_CHANNEL=LTS;
-DOCFX_VERSION=2.40.5
+DOCFX_VERSION=2.49.0
 DOCFX_EXE=$TOOLS_DIR/docfx.console/tools/docfx.exe
 
 # Define default arguments.
