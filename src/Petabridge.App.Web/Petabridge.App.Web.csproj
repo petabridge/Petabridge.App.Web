@@ -7,12 +7,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
-
-  <ItemGroup>
-    <None Remove="app.conf" />
-  </ItemGroup>
-
-
   <ItemGroup>
     <Content Include="app.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -21,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Akka.Cluster" Version="$(AkkaVersion)" />
+    <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
