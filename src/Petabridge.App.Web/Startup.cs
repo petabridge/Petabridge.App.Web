@@ -23,7 +23,11 @@ namespace Petabridge.App.Web
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHostedService<AkkaService>();
+              // creates an instance of the ISignalRProcessor that can be handled by SignalR
+            services.AddSingleton<IConsoleReporter, AkkaService>();
+
+            // starts the IHostedService, which creates the ActorSystem and actors
+            services.AddHostedService<AkkaService>(sp => (AkkaService)sp.GetRequiredService<IConsoleReporter>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,11 +42,11 @@ namespace Petabridge.App.Web
 
             app.UseEndpoints(endpoints =>
             {
-                var actorRef = AkkaService.Sys.ActorOf(Props.Create(() => new ConsoleActor()), "console");
+                var reporter = endpoints.ServiceProvider.GetRequiredService<IConsoleReporter>();
 
                 endpoints.MapGet("/", async context =>
                 {
-                    actorRef.Tell($"hit from {context.TraceIdentifier}");
+                    reporter.Report($"hit from {context.TraceIdentifier}"); // calls Akka.NET under the covers
                     await context.Response.WriteAsync("Hello World!");
                 });
             });
