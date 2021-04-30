@@ -1,0 +1,27 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "11:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: Akka.TestKit.XUnit2
+    versions:
+    - 1.4.16
+    - 1.4.17
+  - dependency-name: Akka.Cluster
+    versions:
+    - 1.4.16
+    - 1.4.17
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.8.3
+    - 16.9.1
+  - dependency-name: Petabridge.Cmd.Remote
+    versions:
+    - 0.8.2
+  - dependency-name: Petabridge.Cmd.Cluster
+    versions:
+    - 0.8.2
