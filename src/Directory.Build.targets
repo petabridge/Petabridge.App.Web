@@ -1,5 +1,5 @@
 <Project> 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)'=='.csproj'">
     <LibraryFramework>netstandard2.0</LibraryFramework>
     <NetCoreFramework>net5</NetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>
