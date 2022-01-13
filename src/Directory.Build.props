@@ -16,7 +16,7 @@
     <NetCoreFramework>net6.0</NetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>
     <XunitVersion>2.4.1</XunitVersion>
-    <TestSdkVersion>16.9.4</TestSdkVersion>
+    <TestSdkVersion>17.0.0</TestSdkVersion>
     <AkkaVersion>1.4.31</AkkaVersion>
     <PbmVersion>0.8.5</PbmVersion>
     <FluentAssertionsVersion>6.3.0</FluentAssertionsVersion>
