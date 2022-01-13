@@ -46,7 +46,7 @@ namespace Petabridge.App.Web
             // N.B. `WithActorRefProvider` isn't actually needed here - the HOCON file already specifies Akka.Cluster
 
             // enable DI support inside this ActorSystem, if needed
-            var diSetup = ServiceProviderSetup.Create(_serviceProvider);
+            var diSetup = DependencyResolverSetup.Create(_serviceProvider);
 
             // merge this setup (and any others) together into ActorSystemSetup
             var actorSystemSetup = bootstrap.And(diSetup);
@@ -57,13 +57,13 @@ namespace Petabridge.App.Web
             // start Petabridge.Cmd (https://cmd.petabridge.com/)
             var pbm = PetabridgeCmd.Get(ClusterSystem);
             pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(RemoteCommands.Instance);
+            pbm.RegisterCommandPalette(new RemoteCommands());
             pbm.Start(); // begin listening for PBM management commands
 
             // instantiate actors
 
             // use the ServiceProvider ActorSystem Extension to start DI'd actors
-            var sp = ServiceProvider.For(ClusterSystem);
+            var sp = DependencyResolver.For(ClusterSystem); ;
             ConsoleActor = ClusterSystem.ActorOf(Props.Create(() => new ConsoleActor()), "console");
 
             // add a continuation task that will guarantee 
