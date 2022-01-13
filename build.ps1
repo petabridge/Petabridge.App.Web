@@ -29,7 +29,7 @@ Param(
     [string[]]$ScriptArgs
 )
 
-$FakeVersion = "4.61.2"
+$FakeVersion = "4.64.13"
 $DotNetChannel = "LTS";
 $NugetVersion = "4.1.0";
 $NugetUrl = "https://dist.nuget.org/win-x86-commandline/v$NugetVersion/nuget.exe"

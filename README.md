@@ -62,11 +62,6 @@ First release
 
 But in this case the NuGet and assembly version will be `0.1.0-beta1`.
 
-If you add any new projects to the solution created with this template, be sure to add the following line to each one of them in order to ensure that you can take advantage of `common.props` for standardization purposes:
-
-```
-<Import Project="..\common.props" />
-```
 
 ### Conventions
 The attached build script will automatically do the following based on the conventions of the project names added to this project:
