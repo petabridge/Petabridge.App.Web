@@ -49,8 +49,8 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Test'
-        run: ./build.cmd Test
+      - name: Run './build.cmd RunTests'
+        run: ./build.cmd RunTests
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
   ubuntu-latest:
@@ -71,7 +71,7 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Test'
-        run: ./build.cmd Test
+      - name: Run './build.cmd RunTests'
+        run: ./build.cmd RunTests
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}

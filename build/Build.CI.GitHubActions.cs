@@ -16,7 +16,7 @@ using Nuke.Common.Utilities;
     OnPushBranches = new[] { "master", "dev" },
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
-    InvokedTargets = new[] { nameof(Test) },
+    InvokedTargets = new[] { nameof(RunTests) },
     OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     PublishArtifacts = false,
     EnableGitHubContext = true)

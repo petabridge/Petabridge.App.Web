@@ -16,8 +16,14 @@ using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.DocFX.DocFXTasks;
 using System.Text.Json;
-using Nuke.Common.ChangeLog;
 using System.IO;
+using static Nuke.Common.Tools.NuGet.NuGetTasks;
+using static Nuke.Common.ChangeLog.ChangelogTasks;
+using static Nuke.Common.Tools.Git.GitTasks;
+using Nuke.Common.ChangeLog;
+using System.Collections.Generic;
+using Nuke.Common.Tools.GitHub;
+using Nuke.Common.Utilities;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -29,7 +35,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Clean);
+    public static int Main() => Execute<Build>(x => x.CreatePackage);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -37,6 +43,8 @@ partial class Build : NukeBuild
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion] readonly GitVersion GitVersion;
+
+    [Parameter] string NugetPrerelease;
 
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
@@ -49,6 +57,8 @@ partial class Build : NukeBuild
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
     public string ChangelogFile => RootDirectory / "CHANGELOG.md";
 
+    [Parameter] readonly string Source = "https://resharper-plugins.jetbrains.com/api/v2/package";
+
     static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ? 
         null 
         : JsonSerializer.Deserialize<JsonElement>(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT"));
@@ -56,10 +66,9 @@ partial class Build : NukeBuild
     //let hasTeamCity = (not (buildNumber = "0")) // check if we have the TeamCity environment variable for build # set
     static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
         
-    public ChangeLog Changelog => ChangelogTasks.ReadChangelog(ChangelogFile);
+    public ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     public ReleaseNotes LatestVersion => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
-
     public string ReleaseVersion => LatestVersion.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
     Target Clean => _ => _
@@ -78,14 +87,68 @@ partial class Build : NukeBuild
             DotNetRestore(s => s
                 .SetProjectFile(Solution));
         });
-    Target Test => _ => _
+    IEnumerable<string> ChangelogSectionNotes => ExtractChangelogSectionNotes(ChangelogFile);
+
+    Target RunChangelog => _ => _
+        //.OnlyWhenStatic(() => InvokedTargets.Contains(nameof(RunChangelog)))
+        .Executes(() =>
+        {
+            FinalizeChangelog(ChangelogFile, GitVersion.SemVer, GitRepository);
+
+            Git($"add {ChangelogFile}");
+            Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
+            Git($"tag -f {GitVersion.SemVer}");
+        });
+    Target CreatePackage => _ => _
+      .DependsOn(RunTests)
+      .Executes(() =>
+      {
+          var version = LatestVersion;
+          var projects = Solution.Projects
+          .Where(x => !x.Name.Contains("Test") && !x.Name.Contains("_build"));
+          foreach(var project in projects)
+          {
+              DotNetPack(s => s
+                  .SetProject(project)
+                  .SetConfiguration(Configuration)
+                  .EnableNoBuild()
+
+                  .EnableNoRestore()
+                  .SetAssemblyVersion(version.Version.ToString())
+                  .SetFileVersion(version.Version.ToString())
+                  .SetVersion(version.Version.ToString())
+                  .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
+                  .SetDescription("YOUR_DESCRIPTION_HERE")
+                  .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
+                  .SetOutputDirectory(ArtifactsDirectory / "nuget")); ;
+          }
+      });
+    Target RunTests => _ => _
+        .After(Compile)
         .Executes(() =>
         {
             //var version = ReleaseVersion;
             //var notes = LatestVersion.Notes;
             //var gnite = ChangelogTasks.GetNuGetReleaseNotes(ChangelogFile);
-            DotNetRestore(s => s
-                .SetProjectFile(Solution));
+            var projects = Solution.GetProjects("*.Tests");
+            foreach(var project in projects)
+            {
+                Information($"Running tests from {project}");
+                foreach (var fw in project.GetTargetFrameworks())
+                {
+                    Information($"Running for {project} ({fw}) ...");
+                    DotNetTest(c => c
+                           .SetProjectFile(project)
+                           .SetConfiguration(Configuration.ToString())
+                           .SetFramework(fw)
+                           .SetResultsDirectory(OutputTests)
+                           .SetProcessWorkingDirectory(Directory.GetParent(project).FullName) 
+                           //.SetDiagnosticsFile(TestsDirectory)
+                           .SetLoggers("trx")
+                           .SetVerbosity(verbosity: DotNetVerbosity.Normal)
+                           .EnableNoBuild());
+                }
+            }
         });
     Target Docker => _ => _
         .Executes(() =>
@@ -125,4 +188,8 @@ partial class Build : NukeBuild
         });
 
 
+    static void Information(string info)
+    {
+        Serilog.Log.Information(info);
+    }
 }
