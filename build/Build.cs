@@ -120,10 +120,11 @@ partial class Build : NukeBuild
                   .SetAssemblyVersion(version.Version.ToString())
                   .SetFileVersion(version.Version.ToString())
                   .SetVersion(version.Version.ToString())
+                  .SetIncludeSymbols(true)  
                   .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
                   .SetDescription("YOUR_DESCRIPTION_HERE")
                   .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
-                  .SetOutputDirectory(ArtifactsDirectory / "nuget")); ;
+                  .SetOutputDirectory(OutputNuget)); 
           }
       });
     Target RunTests => _ => _
