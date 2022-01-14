@@ -127,9 +127,6 @@ partial class Build : NukeBuild
         .After(Compile)
         .Executes(() =>
         {
-            //var version = ReleaseVersion;
-            //var notes = LatestVersion.Notes;
-            //var gnite = ChangelogTasks.GetNuGetReleaseNotes(ChangelogFile);
             var projects = Solution.GetProjects("*.Tests");
             foreach(var project in projects)
             {
@@ -143,7 +140,6 @@ partial class Build : NukeBuild
                            .SetFramework(fw)
                            .SetResultsDirectory(OutputTests)
                            .SetProcessWorkingDirectory(Directory.GetParent(project).FullName) 
-                           //.SetDiagnosticsFile(TestsDirectory)
                            .SetLoggers("trx")
                            .SetVerbosity(verbosity: DotNetVerbosity.Normal)
                            .EnableNoBuild());
