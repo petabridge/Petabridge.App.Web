@@ -15,6 +15,9 @@ using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.DocFX.DocFXTasks;
+using System.Text.Json;
+using Nuke.Common.ChangeLog;
+using System.IO;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -26,7 +29,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Compile);
+    public static int Main() => Execute<Build>(x => x.Clean);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -44,13 +47,27 @@ partial class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "src";
     AbsolutePath DocSiteDirectory => RootDirectory / "docs/_site";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
+    public string ChangelogFile => RootDirectory / "CHANGELOG.md";
 
-    readonly string _githubContext = EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT");
+    static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ? 
+        null 
+        : JsonSerializer.Deserialize<JsonElement>(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT"));
+
+    //let hasTeamCity = (not (buildNumber = "0")) // check if we have the TeamCity environment variable for build # set
+    static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
+        
+    public ChangeLog Changelog => ChangelogTasks.ReadChangelog(ChangelogFile);
+
+    public ReleaseNotes LatestVersion => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
+
+    public string ReleaseVersion => LatestVersion.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
         {
+            var version = ReleaseVersion;
+            var notes = LatestVersion.Notes;
             SourceDirectory
             .GlobDirectories("**/bin", "**/obj", Output, OutputTests, OutputPerfTests, OutputNuget, DocSiteDirectory)
             .ForEach(DeleteDirectory);

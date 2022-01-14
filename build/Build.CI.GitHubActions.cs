@@ -53,26 +53,17 @@ class CustomGitHubActionsAttribute : GitHubActionsAttribute
 
     protected override GitHubActionsJob GetJobs(GitHubActionsImage image, IReadOnlyCollection<ExecutableTarget> relevantTargets)
     {
-        GitHubActionsJob job = null;
-        try
+        var job = base.GetJobs(image, relevantTargets);
+        var newSteps = new List<GitHubActionsStep>(job.Steps);
+        foreach (var version in new[] { "6.0.*", "5.0.*" })
         {
-            job = base.GetJobs(image, relevantTargets);
-            var newSteps = new List<GitHubActionsStep>(job.Steps);
-            foreach (var version in new[] { "6.0.*", "5.0.*" })
+            newSteps.Insert(1, new GitHubActionsSetupDotNetStep
             {
-                newSteps.Insert(1, new GitHubActionsSetupDotNetStep
-                {
-                    Version = version
-                });
-            }
-
-            job.Steps = newSteps.ToArray();
-            return job;
+                Version = version
+            });
         }
-        catch (Exception ex)
-        {
 
-        }
+        job.Steps = newSteps.ToArray();
         return job;
     }
 }
@@ -83,22 +74,15 @@ class GitHubActionsSetupDotNetStep : GitHubActionsStep
 
     public override void Write(CustomFileWriter writer)
     {
-        try
-        {
-            writer.WriteLine("- uses: actions/setup-dotnet@v1");
+        writer.WriteLine("- uses: actions/setup-dotnet@v1");
 
+        using (writer.Indent())
+        {
+            writer.WriteLine("with:");
             using (writer.Indent())
             {
-                writer.WriteLine("with:");
-                using (writer.Indent())
-                {
-                    writer.WriteLine($"dotnet-version: {Version}");
-                }
+                writer.WriteLine($"dotnet-version: {Version}");
             }
-        }
-        catch (Exception ex)
-        {
-
         }
     }
 }
