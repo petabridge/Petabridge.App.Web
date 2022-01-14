@@ -56,6 +56,9 @@ partial class Build : NukeBuild
     AbsolutePath DocSiteDirectory => RootDirectory / "docs/_site";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
     public string ChangelogFile => RootDirectory / "CHANGELOG.md";
+    public AbsolutePath DocFxDir => RootDirectory / "docs";
+    public string DocFxDirJson => DocFxDir / "docfx.json";
+
 
     [Parameter] readonly string Source = "https://resharper-plugins.jetbrains.com/api/v2/package";
 
@@ -155,24 +158,34 @@ partial class Build : NukeBuild
     //--------------------------------------------------------------------------------
     // Documentation 
     //--------------------------------------------------------------------------------
-    Target DocFx => _ => _
-        .DependsOn(Restore)
+    Target CreateMetadata => _ => _
         .DependsOn(Compile)
         .Executes(() => 
         {
-            var docsPath = "./docs";
-            DocFX($"build {docsPath}/docfx.json", workingDirectory: docsPath, timeout: TimeSpan.FromMinutes(30).Minutes);
+            DocFX($"metadata {DocFxDirJson}");
         });
+
+    Target DocFx => _ => _
+        .DependsOn(CreateMetadata)
+        .Executes(() => 
+        {
+            DocFX($"build {DocFxDirJson}", workingDirectory: DocFxDir, timeout: TimeSpan.FromMinutes(30).Minutes);
+        });
+
+    Target ServeDocs => _ => _
+        .DependsOn(DocFx)
+        .Executes(() => DocFX($"{DocFxDirJson} --serve"));
+
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
+            var version = LatestVersion;
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetAssemblyVersion(version.Version.ToString())
+                .SetFileVersion(version.Version.ToString())
                 .EnableNoRestore());
         });
 
