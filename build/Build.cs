@@ -26,7 +26,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Install);
+    public static int Main() => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -34,15 +34,26 @@ partial class Build : NukeBuild
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion] readonly GitVersion GitVersion;
-    AbsolutePath OutputDirectory => RootDirectory / "output";
+
+    // Directories
+    AbsolutePath ToolsDir => RootDirectory / "tools";
+    AbsolutePath Output => RootDirectory / "bin";
+    AbsolutePath OutputNuget => Output / "nuget";
+    AbsolutePath OutputTests => RootDirectory / "TestResults";
+    AbsolutePath OutputPerfTests => RootDirectory / "PerfResults";
     AbsolutePath SourceDirectory => RootDirectory / "src";
+    AbsolutePath DocSiteDirectory => RootDirectory / "docs/_site";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
+
+    readonly string _githubContext = EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT");
 
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
         {
-            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
+            SourceDirectory
+            .GlobDirectories("**/bin", "**/obj", Output, OutputTests, OutputPerfTests, OutputNuget, DocSiteDirectory)
+            .ForEach(DeleteDirectory);
             EnsureCleanDirectory(ArtifactsDirectory);
         });
 
@@ -53,6 +64,12 @@ partial class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
     Target Test => _ => _
+        .Executes(() =>
+        {
+            DotNetRestore(s => s
+                .SetProjectFile(Solution));
+        });
+    Target Docker => _ => _
         .Executes(() =>
         {
             DotNetRestore(s => s

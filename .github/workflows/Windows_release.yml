@@ -9,26 +9,21 @@
 #
 #     - To trigger manual generation invoke:
 #
-#         nuke --generate-configuration GitHubActions_Build --host GitHubActions
+#         nuke --generate-configuration GitHubActions_Windows_release --host GitHubActions
 #
 # </auto-generated>
 # ------------------------------------------------------------------------------
 
-name: Build
+name: Windows_release
 
 on:
   push:
     branches:
-      - master
-      - dev
+      - 'refs/tags/*'
     paths:
       - '!docs/**/*'
       - '!package.json'
       - '!README.md'
-  pull_request:
-    branches:
-      - master
-      - dev
 
 jobs:
   windows-latest:
@@ -49,29 +44,7 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Compile'
-        run: ./build.cmd Compile
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-  ubuntu-latest:
-    name: ubuntu-latest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 5.0.*
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.*
-      - name: Cache .nuke/temp, ~/.nuget/packages
-        uses: actions/cache@v2
-        with:
-          path: |
-            .nuke/temp
-            ~/.nuget/packages
-          key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Compile'
-        run: ./build.cmd Compile
+      - name: Run './build.cmd Docker'
+        run: ./build.cmd Docker
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}

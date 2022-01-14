@@ -9,20 +9,7 @@ using Nuke.Common.CI.GitHubActions.Configuration;
 using Nuke.Common.Execution;
 using Nuke.Common.Utilities;
 
-[CustomGitHubActions("Build",
-    GitHubActionsImage.WindowsLatest,
-    GitHubActionsImage.UbuntuLatest,
-    AutoGenerate = true,
-    OnPushBranches = new[] { "master", "dev" },
-    OnPullRequestBranches = new[] { "master", "dev" },
-    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
-    InvokedTargets = new[] { nameof(Compile) },
-    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
-    PublishArtifacts = false,
-    EnableGitHubContext = true)
-]
-
-[CustomGitHubActions("Tests",
+[CustomGitHubActions("pr_validation",
     GitHubActionsImage.WindowsLatest,
     GitHubActionsImage.UbuntuLatest,
     AutoGenerate = true,
@@ -30,6 +17,27 @@ using Nuke.Common.Utilities;
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
     InvokedTargets = new[] { nameof(Test) },
+    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    PublishArtifacts = false,
+    EnableGitHubContext = true)
+]
+
+[CustomGitHubActions("Docker_build",
+    GitHubActionsImage.UbuntuLatest,
+    AutoGenerate = true,
+    OnPushBranches = new[] { "master", "dev" },
+    OnPullRequestBranches = new[] { "master", "dev" },
+    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
+    InvokedTargets = new[] { nameof(Docker) },
+    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    EnableGitHubContext = true)
+]
+[CustomGitHubActions("Windows_release",
+    GitHubActionsImage.WindowsLatest,
+    AutoGenerate = true,
+    OnPushBranches = new[] { "refs/tags/*" },
+    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
+    InvokedTargets = new[] { nameof(Docker) },
     OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     EnableGitHubContext = true)
 ]
