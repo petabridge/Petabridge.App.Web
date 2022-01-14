@@ -65,9 +65,7 @@ partial class Build : NukeBuild
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
-        {
-            var version = ReleaseVersion;
-            var notes = LatestVersion.Notes;
+        {            
             SourceDirectory
             .GlobDirectories("**/bin", "**/obj", Output, OutputTests, OutputPerfTests, OutputNuget, DocSiteDirectory)
             .ForEach(DeleteDirectory);
@@ -83,6 +81,9 @@ partial class Build : NukeBuild
     Target Test => _ => _
         .Executes(() =>
         {
+            //var version = ReleaseVersion;
+            //var notes = LatestVersion.Notes;
+            //var gnite = ChangelogTasks.GetNuGetReleaseNotes(ChangelogFile);
             DotNetRestore(s => s
                 .SetProjectFile(Solution));
         });
