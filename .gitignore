@@ -1,6 +1,5 @@
 # Custom
 tools/
-build/
 .nuget/
 .dotnet/
 .idea/
