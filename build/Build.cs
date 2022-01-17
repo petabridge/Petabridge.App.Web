@@ -17,15 +17,11 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.DocFX.DocFXTasks;
 using System.Text.Json;
 using System.IO;
-using static Nuke.Common.Tools.NuGet.NuGetTasks;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.Tools.Git.GitTasks;
 using static Nuke.Common.Tools.BenchmarkDotNet.BenchmarkDotNetTasks;
 using Nuke.Common.ChangeLog;
 using System.Collections.Generic;
-using Nuke.Common.Tools.GitHub;
-using Nuke.Common.Utilities;
-using Nuke.Common.Tools.BenchmarkDotNet;
 using Nuke.Common.Tools.DocFX;
 
 [CheckBuildProjectConfigurations]
@@ -38,7 +34,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.ServeDocs);
+    public static int Main() => Execute<Build>(x => x.PublishNuget);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -47,6 +43,10 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion(Framework = "net6.0")] readonly GitVersion GitVersion;
 
+    [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
+    [Parameter] string SymbolsPublishUrl;
+
+    [Parameter] [Secret] string NugetKey;
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
     AbsolutePath Output => RootDirectory / "bin";
@@ -58,9 +58,6 @@ partial class Build : NukeBuild
     public string ChangelogFile => RootDirectory / "CHANGELOG.md";
     public AbsolutePath DocFxDir => RootDirectory / "docs";
     public AbsolutePath DocFxDirJson => DocFxDir / "docfx.json";
-
-
-    [Parameter] readonly string Source = "https://resharper-plugins.jetbrains.com/api/v2/package";
 
     static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ? 
         null 
@@ -146,6 +143,39 @@ partial class Build : NukeBuild
                   .SetOutputDirectory(OutputNuget)); 
           }
       });
+    Target PublishNuget => _ => _
+    .DependsOn(CreateNuget)
+    .Requires(() => NugetPublishUrl)
+    .Requires(() => !NugetKey.IsNullOrEmpty())
+    .Executes(() => 
+    {
+        var packages = Output.GlobFiles("nuget/*.nupkg", "nuget/*.symbols.nupkg");
+        var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);   
+        if(!string.IsNullOrWhiteSpace(NugetPublishUrl))
+        {
+            foreach (var package in packages)
+            {
+                if (shouldPublishSymbolsPackages)
+                {
+                    DotNetNuGetPush(s => s
+                     .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
+                     .SetTargetPath(package)
+                     .SetSource(NugetPublishUrl)
+                     .SetSymbolSource(SymbolsPublishUrl)
+                     .SetApiKey(NugetKey));
+                }
+                else
+                {
+                    DotNetNuGetPush(s => s
+                      .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
+                      .SetTargetPath(package)
+                      .SetSource(NugetPublishUrl)
+                      .SetApiKey(NugetKey)
+                  );
+                }
+            }
+        }        
+    });
     Target RunTests => _ => _
         .After(Compile)
         .Executes(() =>

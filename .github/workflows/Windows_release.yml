@@ -43,4 +43,5 @@ jobs:
       - name: Run './build.cmd Docker'
         run: ./build.cmd Docker
         env:
+          Nuget_Key: ${{ secrets.NUGET_KEY }}
           GITHUB_CONTEXT: ${{ toJSON(github) }}
