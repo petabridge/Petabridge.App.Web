@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using Nuke.Common.Tools.GitHub;
 using Nuke.Common.Utilities;
 using Nuke.Common.Tools.BenchmarkDotNet;
+using Nuke.Common.Tools.DocFX;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -37,7 +38,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.CreateNuget);
+    public static int Main() => Execute<Build>(x => x.ServeDocs);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -46,8 +47,6 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion(Framework = "net6.0")] readonly GitVersion GitVersion;
 
-    [Parameter] string NugetPrerelease;
-
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
     AbsolutePath Output => RootDirectory / "bin";
@@ -55,11 +54,10 @@ partial class Build : NukeBuild
     AbsolutePath OutputTests => RootDirectory / "TestResults";
     AbsolutePath OutputPerfTests => RootDirectory / "PerfResults";
     AbsolutePath SourceDirectory => RootDirectory / "src";
-    AbsolutePath DocSiteDirectory => RootDirectory / "docs/_site";
-    AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
+    AbsolutePath DocSiteDirectory => RootDirectory / "docs" / "_site";
     public string ChangelogFile => RootDirectory / "CHANGELOG.md";
     public AbsolutePath DocFxDir => RootDirectory / "docs";
-    public string DocFxDirJson => DocFxDir / "docfx.json";
+    public AbsolutePath DocFxDirJson => DocFxDir / "docfx.json";
 
 
     [Parameter] readonly string Source = "https://resharper-plugins.jetbrains.com/api/v2/package";
@@ -200,23 +198,33 @@ partial class Build : NukeBuild
     //--------------------------------------------------------------------------------
     // Documentation 
     //--------------------------------------------------------------------------------
-    Target CreateMetadata => _ => _
+    Target DocsInit => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            DocFXInit(s => s.SetOutputFolder(DocFxDir).SetQuiet(true));
+        });
+    Target DocsMetadata => _ => _
         .DependsOn(Compile)
         .Executes(() => 
         {
-            DocFX($"metadata {DocFxDirJson}");
+            DocFXMetadata(s => s
+            .SetProjects(DocFxDirJson)
+            .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
-    Target DocFx => _ => _
-        .DependsOn(CreateMetadata)
+    Target DocBuild => _ => _
+        .DependsOn(DocsMetadata)
         .Executes(() => 
         {
-            DocFX($"build {DocFxDirJson}", workingDirectory: DocFxDir, timeout: TimeSpan.FromMinutes(30).Minutes);
+            DocFXBuild(s => s
+            .SetConfigFile(DocFxDirJson)
+            .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
     Target ServeDocs => _ => _
-        .DependsOn(DocFx)
-        .Executes(() => DocFX($"{DocFxDirJson} --serve"));
+        .DependsOn(DocBuild)
+        .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir)));
 
     Target Compile => _ => _
         .DependsOn(Restore)

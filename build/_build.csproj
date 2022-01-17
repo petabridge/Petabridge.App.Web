@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="docfx.console" Version="2.58.9" ExcludeAssets="build"/>
     <PackageReference Include="Nuke.Common" Version="6.0.1" />
     <PackageDownload Include="GitVersion.Tool" Version="[5.8.1]" />
   </ItemGroup>
