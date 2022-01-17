@@ -40,8 +40,8 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Docker'
-        run: ./build.cmd Docker
+      - name: Run './build.cmd BuildImage'
+        run: ./build.cmd BuildImage
         env:
           Nuget_Key: ${{ secrets.NUGET_KEY }}
           GITHUB_CONTEXT: ${{ toJSON(github) }}

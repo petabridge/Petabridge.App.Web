@@ -24,6 +24,8 @@ using Nuke.Common.ChangeLog;
 using System.Collections.Generic;
 using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.Docker;
+using static Nuke.Common.Tools.SignClient.SignClientTasks;
+using System.Text;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -35,7 +37,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.PublishCode);
+    public static int Main() => Execute<Build>(x => x.Install);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -46,11 +48,20 @@ partial class Build : NukeBuild
 
     [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
     [Parameter] string SymbolsPublishUrl;
+
     [Parameter] string DockerRegistryUrl;
+
+    // Metadata used when signing packages and DLLs
+    [Parameter] string SigningName = "My Library";
+    [Parameter] string SigningDescription = "My REALLY COOL Library";
+    [Parameter] string SigningUrl = "https://signing.is.cool/";
 
     [Parameter] [Secret] string NugetKey;
     [Parameter] [Secret] string DockerUsername;
     [Parameter] [Secret] string DockerPassword;
+
+    [Parameter] [Secret] string SignClientSecret;
+    [Parameter] [Secret] string SignClientUser;
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
     AbsolutePath Output => RootDirectory / "bin";
@@ -265,6 +276,36 @@ partial class Build : NukeBuild
                 }
             }
         });
+    Target SignPackages => _ => _
+        .DependsOn(CreateNuget)
+        .Requires(() => !SignClientSecret.IsNullOrEmpty())
+        .Requires(() => !SignClientUser.IsNullOrEmpty())
+        .Executes(() =>
+        {
+            //not sure SignClient supports .nupkg
+            //https://discoverdot.net/projects/sign-service?#user-content-supported-file-types
+            var assemblies = OutputNuget.GlobFiles("*.nupkg");            
+            foreach(var asm in assemblies)
+            {
+                var stringBuilder = new StringBuilder();
+                stringBuilder.Append("sign");
+                stringBuilder.Append("--config");
+                stringBuilder.Append(RootDirectory / "appsettings.json");
+                stringBuilder.Append("-i");
+                stringBuilder.Append(asm);
+                stringBuilder.Append("-r");
+                stringBuilder.Append(SignClientUser);
+                stringBuilder.Append("-s");
+                stringBuilder.Append(SignClientSecret);
+                stringBuilder.Append("-n");
+                stringBuilder.Append(SigningName);
+                stringBuilder.Append("-d");
+                stringBuilder.Append(SigningDescription);
+                stringBuilder.Append("-u");
+                stringBuilder.Append(SigningUrl);
+                SignClient(stringBuilder.ToString(), workingDirectory: RootDirectory, timeout: TimeSpan.FromMinutes(5).Minutes);
+            }
+        });
     private AbsolutePath[] GetDockerProjects()
     {
         return SourceDirectory.GlobFiles("**/Dockerfile")// folders with Dockerfiles in it
@@ -303,12 +344,6 @@ partial class Build : NukeBuild
             });
 
     });
-    Target Docker => _ => _
-        .Executes(() =>
-        {
-            DotNetRestore(s => s
-                .SetProjectFile(Solution));
-        });
     //--------------------------------------------------------------------------------
     // Documentation 
     //--------------------------------------------------------------------------------
@@ -354,9 +389,9 @@ partial class Build : NukeBuild
         });
 
     Target Install => _ => _
-        //.DependsOn<IPack>()
         .Executes(() =>
         {
+            DotNet($@"dotnet tool install SignClient --version 1.3.155 --tool-path ""{ToolsDir}"" ");
             DotNet($"tool install Nuke.GlobalTool --global");
         });
 

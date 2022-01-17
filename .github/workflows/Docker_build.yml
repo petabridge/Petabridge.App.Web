@@ -45,8 +45,8 @@ jobs:
             .nuke/temp
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('global.json', 'src/**/*.csproj') }}
-      - name: Run './build.cmd Docker'
-        run: ./build.cmd Docker
+      - name: Run './build.cmd BuildImage'
+        run: ./build.cmd BuildImage
         env:
           Docker_Username: ${{ secrets.DOCKER_USERNAME }}
           Docker_Password: ${{ secrets.DOCKER_PASSWORD }}
