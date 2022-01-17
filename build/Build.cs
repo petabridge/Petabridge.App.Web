@@ -20,10 +20,12 @@ using System.IO;
 using static Nuke.Common.Tools.NuGet.NuGetTasks;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.Tools.Git.GitTasks;
+using static Nuke.Common.Tools.BenchmarkDotNet.BenchmarkDotNetTasks;
 using Nuke.Common.ChangeLog;
 using System.Collections.Generic;
 using Nuke.Common.Tools.GitHub;
 using Nuke.Common.Utilities;
+using Nuke.Common.Tools.BenchmarkDotNet;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -93,7 +95,6 @@ partial class Build : NukeBuild
     IEnumerable<string> ChangelogSectionNotes => ExtractChangelogSectionNotes(ChangelogFile);
 
     Target RunChangelog => _ => _
-        //.OnlyWhenStatic(() => InvokedTargets.Contains(nameof(RunChangelog)))
         .Executes(() =>
         {
             // GitVersion.SemVer appends the branch name to the version numer (this is good for pre-releases)
@@ -117,7 +118,7 @@ partial class Build : NukeBuild
             Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {vNext}.\"");
 
             //To sign your commit
-            //Git($"commit -S -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
+            //Git($"commit -S -m \"Finalize {Path.GetFileName(ChangelogFile)} for {vNext}.\"");
 
             Git($"tag -f {GitVersion.SemVer}");
         });
@@ -169,6 +170,26 @@ partial class Build : NukeBuild
                 }
             }
         });
+    Target NBench => _ => _
+    .DependsOn(Compile)
+    //.WhenSkipped(DependencyBehavior.Skip)
+    .Executes(() => 
+    {
+        RootDirectory
+            .GlobDirectories("src/**/*.Tests.Performance.csproj")
+            .ForEach(path => 
+            {
+                BenchmarkDotNet($"--nobuild --concurrent true --trace true --output {OutputPerfTests}", workingDirectory: Directory.GetParent(path).FullName, timeout: TimeSpan.FromMinutes(30).Minutes, logOutput: true);
+                /*BenchmarkDotNet(b => b
+                    .SetProcessWorkingDirectory(Directory.GetParent(path).FullName)                    
+                    .SetAffinity(1)
+                    .SetDisassembly(true)
+                    .SetDisassemblyDiff(true)
+                    .SetExporters(BenchmarkDotNetExporter.GitHub, BenchmarkDotNetExporter.CSV));*/
+
+            });
+
+    });
     Target Docker => _ => _
         .Executes(() =>
         {
