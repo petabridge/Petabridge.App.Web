@@ -96,10 +96,25 @@ partial class Build : NukeBuild
         //.OnlyWhenStatic(() => InvokedTargets.Contains(nameof(RunChangelog)))
         .Executes(() =>
         {
-            FinalizeChangelog(ChangelogFile, GitVersion.SemVer, GitRepository);
+            // GitVersion.SemVer appends the branch name to the version numer (this is good for pre-releases)
+            // If you are executing this under a branch that is not beta or alpha - that is final release branch
+            // you can update the switch block to reflect your release branch name
+            var vNext = string.Empty;
+            var branch = GitVersion.BranchName;
+            switch (branch)
+            {
+                case "main":
+                case "master":
+                    vNext = GitVersion.MajorMinorPatch;
+                    break;
+                default:
+                    vNext = GitVersion.SemVer;  
+                    break;
+            }
+            FinalizeChangelog(ChangelogFile, vNext, GitRepository);
 
             Git($"add {ChangelogFile}");
-            Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
+            Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {vNext}.\"");
 
             //To sign your commit
             //Git($"commit -S -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
