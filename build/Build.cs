@@ -34,7 +34,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.PublishNuget);
+    public static int Main() => Execute<Build>(x => x.PublishCode);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -59,13 +59,13 @@ partial class Build : NukeBuild
     public AbsolutePath DocFxDir => RootDirectory / "docs";
     public AbsolutePath DocFxDirJson => DocFxDir / "docfx.json";
 
-    static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ? 
-        null 
+    static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ?
+        null
         : JsonSerializer.Deserialize<JsonElement>(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT"));
 
     //let hasTeamCity = (not (buildNumber = "0")) // check if we have the TeamCity environment variable for build # set
     static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
-        
+
     public ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     public ReleaseNotes LatestVersion => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
@@ -104,7 +104,7 @@ partial class Build : NukeBuild
                     vNext = GitVersion.MajorMinorPatch;
                     break;
                 default:
-                    vNext = GitVersion.SemVer;  
+                    vNext = GitVersion.SemVer;
                     break;
             }
             FinalizeChangelog(ChangelogFile, vNext, GitRepository);
@@ -126,13 +126,13 @@ partial class Build : NukeBuild
           var version = LatestVersion;
           var projects = SourceDirectory.GlobFiles("**/*.csproj")
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
-          foreach(var project in projects)
+          foreach (var project in projects)
           {
               DotNetPack(s => s
                   .SetProject(project)
                   .SetConfiguration(Configuration)
                   .EnableNoBuild()
-                  .SetIncludeSymbols(true)  
+                  .SetIncludeSymbols(true)
                   .EnableNoRestore()
                   .SetAssemblyVersion(version.Version.ToString())
                   .SetFileVersion(version.Version.ToString())
@@ -140,18 +140,18 @@ partial class Build : NukeBuild
                   .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
                   .SetDescription("YOUR_DESCRIPTION_HERE")
                   .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
-                  .SetOutputDirectory(OutputNuget)); 
+                  .SetOutputDirectory(OutputNuget));
           }
       });
     Target PublishNuget => _ => _
     .DependsOn(CreateNuget)
     .Requires(() => NugetPublishUrl)
     .Requires(() => !NugetKey.IsNullOrEmpty())
-    .Executes(() => 
+    .Executes(() =>
     {
         var packages = Output.GlobFiles("nuget/*.nupkg", "nuget/*.symbols.nupkg");
-        var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);   
-        if(!string.IsNullOrWhiteSpace(NugetPublishUrl))
+        var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);
+        if (!string.IsNullOrWhiteSpace(NugetPublishUrl))
         {
             foreach (var package in packages)
             {
@@ -174,14 +174,14 @@ partial class Build : NukeBuild
                   );
                 }
             }
-        }        
+        }
     });
     Target RunTests => _ => _
         .After(Compile)
         .Executes(() =>
         {
             var projects = Solution.GetProjects("*.Tests");
-            foreach(var project in projects)
+            foreach (var project in projects)
             {
                 Information($"Running tests from {project}");
                 foreach (var fw in project.GetTargetFrameworks())
@@ -192,12 +192,30 @@ partial class Build : NukeBuild
                            .SetConfiguration(Configuration.ToString())
                            .SetFramework(fw)
                            .SetResultsDirectory(OutputTests)
-                           .SetProcessWorkingDirectory(Directory.GetParent(project).FullName) 
+                           .SetProcessWorkingDirectory(Directory.GetParent(project).FullName)
                            .SetLoggers("trx")
                            .SetVerbosity(verbosity: DotNetVerbosity.Normal)
                            .EnableNoBuild());
                 }
             }
+        });
+    private AbsolutePath[] GetDockerProjects()
+    {
+        return SourceDirectory.GlobFiles("**/Dockerfile")// folders with Dockerfiles in it
+            .ToArray();
+    }
+    Target PublishCode => _ => _
+        .Executes(() =>
+        {
+            var dockfiles = GetDockerProjects();
+            foreach(var dockfile in dockfiles)
+            {
+                var (path, projectName) = ($"{Directory.GetParent(dockfile).FullName}", $"{Directory.GetParent(dockfile).Name}".ToLower());
+                var project = Path.Combine(path, $"{projectName}.csproj");
+                DotNetPublish(s => s
+                .SetProject(project)
+                .SetConfiguration(Configuration));
+            }            
         });
     Target NBench => _ => _
     .DependsOn(Compile)
