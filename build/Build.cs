@@ -37,7 +37,7 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.CreatePackage);
+    public static int Main() => Execute<Build>(x => x.CreateNuget);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -122,25 +122,26 @@ partial class Build : NukeBuild
 
             Git($"tag -f {GitVersion.SemVer}");
         });
-    Target CreatePackage => _ => _
+    Target CreateNuget => _ => _
       .DependsOn(RunTests)
       .Executes(() =>
       {
+          //Since this is about a new release, `RunChangeLog` need to be executed to update the ChangeLog.md with the new version
+          //from which LatestVersion will be parsed
           var version = LatestVersion;
-          var projects = Solution.Projects
-          .Where(x => !x.Name.Contains("Test") && !x.Name.Contains("_build"));
+          var projects = SourceDirectory.GlobFiles("**/*.csproj")
+          .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach(var project in projects)
           {
               DotNetPack(s => s
                   .SetProject(project)
                   .SetConfiguration(Configuration)
                   .EnableNoBuild()
-
+                  .SetIncludeSymbols(true)  
                   .EnableNoRestore()
                   .SetAssemblyVersion(version.Version.ToString())
                   .SetFileVersion(version.Version.ToString())
                   .SetVersion(version.Version.ToString())
-                  .SetIncludeSymbols(true)  
                   .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
                   .SetDescription("YOUR_DESCRIPTION_HERE")
                   .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
