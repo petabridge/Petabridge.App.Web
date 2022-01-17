@@ -77,11 +77,11 @@ partial class Build : NukeBuild
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
-        {            
-            SourceDirectory
-            .GlobDirectories("**/bin", "**/obj", Output, OutputTests, OutputPerfTests, OutputNuget, DocSiteDirectory)
+        {
+            RootDirectory
+            .GlobDirectories("src/**/bin", "src/**/obj", Output, OutputTests, OutputPerfTests, OutputNuget, DocSiteDirectory)
             .ForEach(DeleteDirectory);
-            EnsureCleanDirectory(ArtifactsDirectory);
+            EnsureCleanDirectory(Output);
         });
 
     Target Restore => _ => _
