@@ -48,4 +48,6 @@ jobs:
       - name: Run './build.cmd Docker'
         run: ./build.cmd Docker
         env:
+          Docker_Username: ${{ secrets.DOCKER_USERNAME }}
+          Docker_Password: ${{ secrets.DOCKER_PASSWORD }}
           GITHUB_CONTEXT: ${{ toJSON(github) }}

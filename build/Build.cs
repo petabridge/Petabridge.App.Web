@@ -23,6 +23,7 @@ using static Nuke.Common.Tools.BenchmarkDotNet.BenchmarkDotNetTasks;
 using Nuke.Common.ChangeLog;
 using System.Collections.Generic;
 using Nuke.Common.Tools.DocFX;
+using Nuke.Common.Tools.Docker;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -45,8 +46,11 @@ partial class Build : NukeBuild
 
     [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
     [Parameter] string SymbolsPublishUrl;
+    [Parameter] string DockerRegistryUrl;
 
     [Parameter] [Secret] string NugetKey;
+    [Parameter] [Secret] string DockerUsername;
+    [Parameter] [Secret] string DockerPassword;
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
     AbsolutePath Output => RootDirectory / "bin";
@@ -143,6 +147,68 @@ partial class Build : NukeBuild
                   .SetOutputDirectory(OutputNuget));
           }
       });
+    Target DockerLogin => _ => _
+        .Before(PushImage)
+        .Requires(() => !DockerRegistryUrl.IsNullOrEmpty())
+        .Requires(() => !DockerPassword.IsNullOrEmpty())
+        .Requires(() => !DockerUsername.IsNullOrEmpty())
+        .Executes(() =>
+        {
+            var settings = new DockerLoginSettings()
+                .SetServer(DockerRegistryUrl)
+                .SetUsername(DockerUsername)
+                .SetPassword(DockerPassword);
+            DockerTasks.DockerLogin(settings);  
+        });
+    Target BuildImage => _ => _
+        .DependsOn(PublishCode)
+        .Executes(() =>
+        {
+            var version = LatestVersion;
+            var tagVersion = $"{version.Version.Major}.{version.Version.Minor}.{version.Version.Patch}";
+            var dockfiles = GetDockerProjects();
+            foreach (var dockfile in dockfiles)
+            {
+                var image = $"{Directory.GetParent(dockfile).Name}".ToLower();
+                var tags = new List<string>
+                {
+                    $"{image}:latest",
+                    $"{image}:{tagVersion}"
+                };
+                if (!string.IsNullOrWhiteSpace(DockerRegistryUrl))
+                {
+                    tags.Add($"{DockerRegistryUrl}/{image}:latest");
+                    tags.Add($"{DockerRegistryUrl}/{tagVersion}");
+                }
+                var settings = new DockerBuildSettings()
+                 .SetFile(dockfile)
+                 //.SetPull(true)
+                 .SetPath(Directory.GetParent(dockfile).FullName)
+                 //.SetProcessWorkingDirectory(Directory.GetParent(dockfile).FullName)
+                 .SetTag(tags.ToArray());
+                DockerTasks.DockerBuild(settings);
+            }            
+        });
+    Target PushImage => _ => _
+        .DependsOn(DockerLogin)
+        .Executes(() =>
+        {
+            var version = LatestVersion;
+            var tagVersion = $"{version.Version.Major}.{version.Version.Minor}.{version.Version.Patch}";
+            var dockfiles = GetDockerProjects();
+            foreach (var dockfile in dockfiles)
+            {
+                var image = $"{Directory.GetParent(dockfile).Name}".ToLower();
+                var settings = new DockerImagePushSettings()
+                    .SetName(string.IsNullOrWhiteSpace(DockerRegistryUrl) ? $"{image}:{tagVersion}" : $"{image}:{DockerRegistryUrl}/{tagVersion}");
+                DockerTasks.DockerImagePush(settings);
+            }
+        });
+
+    public Target BuildAndPush => _ => _
+    .DependsOn(DockerLogin, BuildImage, PushImage);
+
+
     Target PublishNuget => _ => _
     .DependsOn(CreateNuget)
     .Requires(() => NugetPublishUrl)
@@ -214,7 +280,7 @@ partial class Build : NukeBuild
                 var project = Path.Combine(path, $"{projectName}.csproj");
                 DotNetPublish(s => s
                 .SetProject(project)
-                .SetConfiguration(Configuration));
+                .SetConfiguration(Configuration.Release));
             }            
         });
     Target NBench => _ => _

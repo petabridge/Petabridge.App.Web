@@ -30,6 +30,7 @@ using Nuke.Common.Utilities;
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
     InvokedTargets = new[] { nameof(Docker) },
+    ImportSecrets = new [] { "Docker_Username", "Docker_Password" },
     //causes the on push to not trigger - maybe path-ignore is the right approach!
     //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     EnableGitHubContext = true)
