@@ -17,7 +17,8 @@ using Nuke.Common.Utilities;
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
     InvokedTargets = new[] { nameof(RunTests) },
-    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     PublishArtifacts = false,
     EnableGitHubContext = true)
 ]
@@ -29,7 +30,8 @@ using Nuke.Common.Utilities;
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
     InvokedTargets = new[] { nameof(Docker) },
-    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     EnableGitHubContext = true)
 ]
 [CustomGitHubActions("Windows_release",
@@ -38,7 +40,8 @@ using Nuke.Common.Utilities;
     OnPushBranches = new[] { "refs/tags/*" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
     InvokedTargets = new[] { nameof(Docker) },
-    OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     EnableGitHubContext = true)
 ]
 

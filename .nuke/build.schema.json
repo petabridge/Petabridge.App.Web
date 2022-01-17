@@ -76,13 +76,15 @@
             "enum": [
               "Clean",
               "Compile",
+              "CreateMetadata",
               "CreatePackage",
               "DocFx",
               "Docker",
               "Install",
               "Restore",
               "RunChangelog",
-              "RunTests"
+              "RunTests",
+              "ServeDocs"
             ]
           }
         },
@@ -101,13 +103,15 @@
             "enum": [
               "Clean",
               "Compile",
+              "CreateMetadata",
               "CreatePackage",
               "DocFx",
               "Docker",
               "Install",
               "Restore",
               "RunChangelog",
-              "RunTests"
+              "RunTests",
+              "ServeDocs"
             ]
           }
         },

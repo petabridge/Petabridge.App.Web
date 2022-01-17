@@ -20,10 +20,6 @@ on:
   push:
     branches:
       - 'refs/tags/*'
-    paths:
-      - '!docs/**/*'
-      - '!package.json'
-      - '!README.md'
 
 jobs:
   windows-latest:

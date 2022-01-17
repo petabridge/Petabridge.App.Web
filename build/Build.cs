@@ -42,7 +42,7 @@ partial class Build : NukeBuild
 
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
-    [GitVersion] readonly GitVersion GitVersion;
+    [GitVersion(Framework = "net6.0")] readonly GitVersion GitVersion;
 
     [Parameter] string NugetPrerelease;
 
@@ -100,6 +100,10 @@ partial class Build : NukeBuild
 
             Git($"add {ChangelogFile}");
             Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
+
+            //To sign your commit
+            //Git($"commit -S -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.SemVer}.\"");
+
             Git($"tag -f {GitVersion.SemVer}");
         });
     Target CreatePackage => _ => _
