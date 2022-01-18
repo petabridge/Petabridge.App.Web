@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetCoreFramework)</TargetFramework>
-	  <IsPackable>true</IsPackable>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
