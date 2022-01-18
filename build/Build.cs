@@ -254,7 +254,7 @@ partial class Build : NukeBuild
         }
     });
     Target RunTests => _ => _
-        .After(Compile)
+        .DependsOn(Compile)
         .Executes(() =>
         {
             var projects = Solution.GetProjects("*.Tests");
@@ -324,7 +324,9 @@ partial class Build : NukeBuild
                 .SetConfiguration(Configuration.Release));
             }            
         });
-    Target NBench => _ => _
+    Target All => _ => _
+    .DependsOn(CreateNuget);
+   Target NBench => _ => _
     .DependsOn(Compile)
     //.WhenSkipped(DependencyBehavior.Skip)
     .Executes(() => 
