@@ -17,7 +17,7 @@
     <NBenchVersion>1.2.2</NBenchVersion>
     <XunitVersion>2.4.1</XunitVersion>
     <TestSdkVersion>17.0.0</TestSdkVersion>
-    <AkkaVersion>1.4.31</AkkaVersion>
+    <AkkaVersion>1.4.32</AkkaVersion>
     <PbmVersion>1.0.2</PbmVersion>
     <FluentAssertionsVersion>6.3.0</FluentAssertionsVersion>
     <AkkaBootstrapDockerVersion>0.5.2</AkkaBootstrapDockerVersion>
