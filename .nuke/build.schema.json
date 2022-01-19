@@ -106,6 +106,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "All",
               "BuildAndPush",
               "BuildImage",
               "Clean",
@@ -141,6 +142,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "All",
               "BuildAndPush",
               "BuildImage",
               "Clean",

@@ -324,7 +324,7 @@ partial class Build : NukeBuild
                 .SetConfiguration(Configuration.Release));
             }            
         });
-    Target All => _ => _
+   Target All => _ => _
     .DependsOn(CreateNuget);
    Target NBench => _ => _
     .DependsOn(Compile)
@@ -332,7 +332,7 @@ partial class Build : NukeBuild
     .Executes(() => 
     {
         RootDirectory
-            .GlobDirectories("src/**/*.Tests.Performance.csproj")
+            .GlobFiles("src/**/*.Tests.Performance.csproj")
             .ForEach(path => 
             {
                 BenchmarkDotNet($"--nobuild --concurrent true --trace true --output {OutputPerfTests}", workingDirectory: Directory.GetParent(path).FullName, timeout: TimeSpan.FromMinutes(30).Minutes, logOutput: true);
