@@ -226,7 +226,7 @@ partial class Build : NukeBuild
     .Requires(() => !NugetKey.IsNullOrEmpty())
     .Executes(() =>
     {
-        var packages = Output.GlobFiles("nuget/*.nupkg", "nuget/*.symbols.nupkg");
+        var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg");
         var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);
         if (!string.IsNullOrWhiteSpace(NugetPublishUrl))
         {
