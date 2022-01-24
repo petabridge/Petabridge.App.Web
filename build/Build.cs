@@ -318,8 +318,8 @@ partial class Build : NukeBuild
             var dockfiles = GetDockerProjects();
             foreach(var dockfile in dockfiles)
             {
-                var (path, projectName) = ($"{Directory.GetParent(dockfile).FullName}", $"{Directory.GetParent(dockfile).Name}".ToLower());
-                var project = Path.Combine(path, $"{projectName}.csproj");
+                Information(dockfile.Parent.ToString());
+                var project = dockfile.Parent.GlobFiles("*.csproj").First();
                 DotNetPublish(s => s
                 .SetProject(project)
                 .SetConfiguration(Configuration.Release));
