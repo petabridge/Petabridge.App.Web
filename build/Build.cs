@@ -47,7 +47,7 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion(Framework = "net6.0")] readonly GitVersion GitVersion;
 
-    [Parameter] string NugetUrl = "https://api.nuget.org/v3/index.json";
+    [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
     [Parameter] [Secret] string NugetKey;
 
     [Parameter] string SymbolsPublishUrl;
@@ -226,13 +226,13 @@ partial class Build : NukeBuild
 
     Target PublishNuget => _ => _
     .DependsOn(Nuget)
-    .Requires(() => NugetUrl)
+    .Requires(() => NugetPublishUrl)
     .Requires(() => !NugetKey.IsNullOrEmpty())
     .Executes(() =>
     {
         var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg");
         var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);
-        if (!string.IsNullOrWhiteSpace(NugetUrl))
+        if (!string.IsNullOrWhiteSpace(NugetPublishUrl))
         {
             foreach (var package in packages)
             {
@@ -241,7 +241,7 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                      .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                      .SetTargetPath(package)
-                     .SetSource(NugetUrl)
+                     .SetSource(NugetPublishUrl)
                      .SetSymbolSource(SymbolsPublishUrl)
                      .SetApiKey(NugetKey));
                 }
@@ -250,7 +250,7 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                       .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                       .SetTargetPath(package)
-                      .SetSource(NugetUrl)
+                      .SetSource(NugetPublishUrl)
                       .SetApiKey(NugetKey)
                   );
                 }
@@ -363,7 +363,7 @@ partial class Build : NukeBuild
             .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
-    Target DocBuild => _ => _
+    Target DocFxBuild => _ => _
         .DependsOn(DocsMetadata)
         .Executes(() => 
         {
@@ -373,7 +373,7 @@ partial class Build : NukeBuild
         });
 
     Target ServeDocs => _ => _
-        .DependsOn(DocBuild)
+        .DependsOn(DocFxBuild)
         .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir)));
 
     Target Compile => _ => _
