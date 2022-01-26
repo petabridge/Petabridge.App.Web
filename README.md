@@ -105,7 +105,9 @@ If I changed my current branch to:
     * `build.cmd nuget` - creates pre-release Nuget packages tagged with `dev` in this format: `{next-version}-{branch}.{build}`.
 
 - `master` branch:
-    * `build.cmd nuget` - creates final-release Nuget packages: `{next-version}`.
+    * `build.cmd nuget` - creates final-release Nuget packages: `{next-version}`. Prior to creating a final release:
+
+**CHANGELOG.md** (Release Notes)
 
 ### Deployment
 Petabridge.App uses Docker for deployment - to create Docker images for this project, please run the following command:
