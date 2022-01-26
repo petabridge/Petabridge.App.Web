@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetCoreFramework)</TargetFramework>
-	  <IsPackable>true</IsPackable>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
+	<None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <Content Include="app.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
