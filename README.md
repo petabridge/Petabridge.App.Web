@@ -4,12 +4,12 @@ Update this readme file with your details.
 
 # The Build System
 
-This build system is powered by [NUKE](https://nuke.build/); please see their [API documentation](https://nuke.build/docs/getting-started/philosophy.html) should you need to make any changes to the [`Build.cs`](build\Build.cs) file.
+This build system is powered by [NUKE](https://nuke.build/); please see their [API documentation](https://nuke.build/docs/getting-started/philosophy.html) should you need to make any changes to the `Build.cs` file.
 
 To install Nuke GlobalTool and SignClient:
 
 ```
-build.cmd install
+build.cmd
 ```
 
 ## Supported Build System Commands
@@ -97,7 +97,7 @@ branches: # https://gitversion.net/docs/learn/branching-strategies/gitflow/examp
 ignore:
   sha: []
 ```
-##How does this work?
+## How does this work?
 
 If I changed my current branch to:
 
@@ -105,9 +105,7 @@ If I changed my current branch to:
     * `build.cmd nuget` - creates pre-release Nuget packages tagged with `dev` in this format: `{next-version}-{branch}.{build}`.
 
 - `master` branch:
-    * `build.cmd nuget` - creates final-release Nuget packages: `{next-version}`. Prior to creating a final release:
-
-**CHANGELOG.md** (Release Notes)
+    * `build.cmd nuget` - creates final-release Nuget packages: `{next-version}`.
 
 ### Deployment
 Petabridge.App uses Docker for deployment - to create Docker images for this project, please run the following command:
@@ -124,7 +122,7 @@ You can also specify a remote Docker registry URL and that will cause a copy of 
 ### Release Notes, Version Numbers, Etc
 This project will automatically populate its release notes in all of its modules via the entries written inside [`RELEASE_NOTES.md`](RELEASE_NOTES.md) and will automatically update the versions of all assemblies and NuGet packages via the metadata included inside [`common.props`](src/common.props).
 
-**RELEASE_NOTES.md**
+**CHANGELOG.md** (Release Notes)
 ```
 #### 0.1.0 October 05 2019 ####
 First release

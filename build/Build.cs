@@ -38,10 +38,13 @@ partial class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Install);
+    public static int Main() => Execute<Build>(x => x.Nuget);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = Configuration.Release;
+
+    [Parameter("The final release branch")]
+    readonly string ReleaseBranch = "master";
 
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
@@ -139,9 +142,19 @@ partial class Build : NukeBuild
       .DependsOn(Tests)
       .Executes(() =>
       {
-          //Since this is about a new release, `RunChangeLog` need to be executed to update the ChangeLog.md with the new version
-          //from which LatestVersion will be parsed
           var version = GitVersion.SemVer;
+          var branchName = GitVersion.BranchName;
+
+          if(branchName.Equals(ReleaseBranch, StringComparison.OrdinalIgnoreCase) 
+          && !GitVersion.MajorMinorPatch.Equals(LatestVersion.Version.ToString()))
+          {
+              // Force CHANGELOG.md in case it skipped the mind
+              Assert.Fail($"CHANGELOG.md needs to be update for final release. Current version: '{LatestVersion.Version}'. Next version: {GitVersion.MajorMinorPatch}");
+          }
+          var releaseNotes = branchName.Equals(ReleaseBranch, StringComparison.OrdinalIgnoreCase) 
+                             ? GetNuGetReleaseNotes(ChangelogFile, GitRepository) 
+                             : ParseReleaseNote();
+
           var projects = SourceDirectory.GlobFiles("**/*.csproj")
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach (var project in projects)
@@ -155,7 +168,7 @@ partial class Build : NukeBuild
                   .SetAssemblyVersion(version)
                   .SetFileVersion(version)
                   .SetVersion(version)
-                  .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
+                  .SetPackageReleaseNotes(releaseNotes)
                   .SetDescription("YOUR_DESCRIPTION_HERE")
                   .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
                   .SetOutputDirectory(OutputNuget));
@@ -409,7 +422,10 @@ partial class Build : NukeBuild
             DotNet($@"dotnet tool install SignClient --version 1.3.155 --tool-path ""{ToolsDir}"" ");
             DotNet($"tool install Nuke.GlobalTool --global");
         });
-
+    string ParseReleaseNote()
+    {
+        return XmlTasks.XmlPeek(SourceDirectory / "Directory.Build.props", "//Project/PropertyGroup/PackageReleaseNotes").FirstOrDefault();
+    }
     
     static void Information(string info)
     {

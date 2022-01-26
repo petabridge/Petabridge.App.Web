@@ -79,6 +79,10 @@
             "type": "string"
           }
         },
+        "ReleaseBranch": {
+          "type": "string",
+          "description": "The final release branch"
+        },
         "Root": {
           "type": "string",
           "description": "Root directory during build execution"
