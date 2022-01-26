@@ -114,19 +114,10 @@ partial class Build : NukeBuild
     IEnumerable<string> ChangelogSectionNotes => ExtractChangelogSectionNotes(ChangelogFile);
 
     Target RunChangelog => _ => _
+        .OnlyWhenDynamic(()=> GitVersion.BranchName == ReleaseBranch)
         .Description("Updates the release notes and version number in the `ChangeLog.md`")
         .Executes(() =>
         {
-            var branch = GitVersion.BranchName;
-            switch (branch)
-            {
-                case "main":
-                case "master":
-                    break;
-                default:
-                    Assert.Fail($"Current branch:'{branch}'. You can only execute this in main branch");
-                    break;
-            }
             FinalizeChangelog(ChangelogFile, GitVersion.MajorMinorPatch, GitRepository);
 
             Git($"add {ChangelogFile}");
@@ -139,6 +130,7 @@ partial class Build : NukeBuild
         });
     Target Nuget => _ => _
       .Description("Creates nuget packages")
+      .Before(SignClient, PublishNuget)      
       .DependsOn(Tests)
       .Executes(() =>
       {
@@ -241,12 +233,11 @@ partial class Build : NukeBuild
 
     Target PublishNuget => _ => _
     .Description("Publishes .nuget packages to Nuget")
-    .DependsOn(Nuget)
     .Requires(() => NugetPublishUrl)
     .Requires(() => !NugetKey.IsNullOrEmpty())
     .Executes(() =>
     {
-        var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg");
+        var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg").NotNull();
         var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);
         if (!string.IsNullOrWhiteSpace(NugetPublishUrl))
         {
@@ -297,19 +288,19 @@ partial class Build : NukeBuild
                 }
             }
         });
-    Target SignPackages => _ => _
-        .Description("Sign nuget packages")
-        .DependsOn(Nuget)
+    Target SignClient => _ => _
+        .Unlisted()
+        .Before(PublishNuget)
         .Requires(() => !SignClientSecret.IsNullOrEmpty())
         .Requires(() => !SignClientUser.IsNullOrEmpty())
         .Executes(() =>
         {
-            var assemblies = OutputNuget.GlobFiles("*.nupkg");            
-            foreach(var asm in assemblies)
+            var assemblies = OutputNuget.GlobFiles("*.nupkg");
+            foreach (var asm in assemblies)
             {
-                SignClientSign(s=> s
+                SignClientSign(s => s
                 .SetProcessToolPath(ToolsDir / "SignClient.exe")
-                .SetProcessLogOutput(true)                
+                .SetProcessLogOutput(true)
                 .SetConfig(RootDirectory / "appsettings.json")
                 .SetDescription(SigningDescription)
                 .SetDescriptionUrl(SigningUrl)
@@ -323,13 +314,21 @@ partial class Build : NukeBuild
                 //SignClient(stringBuilder.ToString(), workingDirectory: RootDirectory, timeout: TimeSpan.FromMinutes(5).Minutes);
             }
         });
+    Target SignPackages => _ => _
+        .DependsOn(Nuget, SignClient);
+
+    Target SignAndPublishPackage => _ => _
+         .Description("Sign and publish nuget packages")
+         .DependsOn(SignPackages, PublishNuget);
     private AbsolutePath[] GetDockerProjects()
     {
         return SourceDirectory.GlobFiles("**/Dockerfile")// folders with Dockerfiles in it
             .ToArray();
     }
     Target PublishCode => _ => _
+        .Unlisted()
         .Description("Publish project as release")
+        .DependsOn(Tests)
         .Executes(() =>
         {
             var dockfiles = GetDockerProjects();
@@ -370,12 +369,14 @@ partial class Build : NukeBuild
     // Documentation 
     //--------------------------------------------------------------------------------
     Target DocsInit => _ => _
+        .Unlisted()
         .DependsOn(Compile)
         .Executes(() =>
         {
             DocFXInit(s => s.SetOutputFolder(DocFxDir).SetQuiet(true));
         });
     Target DocsMetadata => _ => _
+        .Unlisted()
         .Description("Create DocFx metadata")
         .DependsOn(Compile)
         .Executes(() => 
@@ -395,9 +396,11 @@ partial class Build : NukeBuild
             .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
+    Target BuildAndServeDocs => _ => _
+    .DependsOn(DocFxBuild, ServeDocs);
+
     Target ServeDocs => _ => _
         .Description("Build and preview documentation")
-        .DependsOn(DocFxBuild)
         .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir)));
 
     Target Compile => _ => _
