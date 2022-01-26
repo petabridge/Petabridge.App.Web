@@ -108,19 +108,19 @@ If I changed my current branch to:
     * `build.cmd nuget` - creates final-release Nuget packages: `{next-version}`.
 
 ### Deployment
-Petabridge.App uses Docker for deployment - to create Docker images for this project, please run the following command:
+Petabridge.App.Web uses Docker for deployment - to create Docker images for this project, please run the following command:
 
 ```
-build.cmd Docker
+build.cmd BuildImage
 ```
 
-By default `build.fsx` will look for every `.csproj` file that has a `Dockerfile` in the same directory - from there the name of the `.csproj` will be converted into [the supported Docker image name format](https://docs.docker.com/engine/reference/commandline/tag/#extended-description), so "Petabridge.App.csproj" will be converted to an image called `petabridge.app:latest` and `petabridge.app:{VERSION}`, where version is determined using the rules defined in the section below.
+By default `BuildImage` will look for every `.csproj` file that has a `Dockerfile` in the same directory - from there the name of the `.csproj` will be converted into [the supported Docker image name format](https://docs.docker.com/engine/reference/commandline/tag/#extended-description), so "Petabridge.App.Web.csproj" will be converted to an image called `petabridge.app:latest` and `petabridge.app:{VERSION}`, where version is determined using the rules defined in the section below.
 
 #### Pushing to a Remote Docker Registry
 You can also specify a remote Docker registry URL and that will cause a copy of this Docker image to be published there as well:
 
 ### Release Notes, Version Numbers, Etc
-This project will automatically populate its release notes in all of its modules via the entries written inside [`RELEASE_NOTES.md`](RELEASE_NOTES.md) and will automatically update the versions of all assemblies and NuGet packages via the metadata included inside [`common.props`](src/common.props).
+This project will automatically populate its release notes in all of its modules via the entries written inside [`CHANGELOG.md`](CHANGELOG.md) and will automatically update the versions of all assemblies and NuGet packages via `GitVersion`.
 
 **CHANGELOG.md** (Release Notes)
 ```
