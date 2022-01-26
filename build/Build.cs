@@ -114,30 +114,25 @@ partial class Build : NukeBuild
         .Description("Updates the release notes and version number in the `ChangeLog.md`")
         .Executes(() =>
         {
-            // GitVersion.SemVer appends the branch name to the version numer (this is good for pre-releases)
-            // If you are executing this under a branch that is not beta or alpha - that is final release branch
-            // you can update the switch block to reflect your release branch name
-            var vNext = string.Empty;
             var branch = GitVersion.BranchName;
             switch (branch)
             {
                 case "main":
                 case "master":
-                    vNext = GitVersion.MajorMinorPatch;
                     break;
                 default:
-                    vNext = GitVersion.SemVer;
+                    Assert.Fail($"Current branch:'{branch}'. You can only execute this in main branch");
                     break;
             }
-            FinalizeChangelog(ChangelogFile, vNext, GitRepository);
+            FinalizeChangelog(ChangelogFile, GitVersion.MajorMinorPatch, GitRepository);
 
             Git($"add {ChangelogFile}");
-            Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {vNext}.\"");
+            Git($"commit -m \"Finalize {Path.GetFileName(ChangelogFile)} for {GitVersion.MajorMinorPatch}.\"");
 
             //To sign your commit
             //Git($"commit -S -m \"Finalize {Path.GetFileName(ChangelogFile)} for {vNext}.\"");
 
-            Git($"tag -f {GitVersion.SemVer}");
+            Git($"tag -f {GitVersion.MajorMinorPatch}");
         });
     Target Nuget => _ => _
       .Description("Creates nuget packages")
@@ -146,7 +141,7 @@ partial class Build : NukeBuild
       {
           //Since this is about a new release, `RunChangeLog` need to be executed to update the ChangeLog.md with the new version
           //from which LatestVersion will be parsed
-          var version = LatestVersion;
+          var version = GitVersion.SemVer;
           var projects = SourceDirectory.GlobFiles("**/*.csproj")
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach (var project in projects)
@@ -157,9 +152,9 @@ partial class Build : NukeBuild
                   .EnableNoBuild()
                   .SetIncludeSymbols(true)
                   .EnableNoRestore()
-                  .SetAssemblyVersion(version.Version.ToString())
-                  .SetFileVersion(version.Version.ToString())
-                  .SetVersion(version.Version.ToString())
+                  .SetAssemblyVersion(version)
+                  .SetFileVersion(version)
+                  .SetVersion(version)
                   .SetPackageReleaseNotes(GetNuGetReleaseNotes(ChangelogFile, GitRepository))
                   .SetDescription("YOUR_DESCRIPTION_HERE")
                   .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
@@ -397,12 +392,13 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            var version = LatestVersion;
+            var version = GitVersion.MajorMinorPatch;
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(version.Version.ToString())
-                .SetFileVersion(version.Version.ToString())
+                .SetAssemblyVersion(version)
+                .SetFileVersion(version)
+                .SetVersion(GitVersion.SemVer)
                 .EnableNoRestore());
         });
 
