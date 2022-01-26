@@ -90,6 +90,7 @@ partial class Build : NukeBuild
     public string ReleaseVersion => LatestVersion.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
     Target Clean => _ => _
+        .Description("Cleans all the output directories")
         .Before(Restore)
         .Executes(() =>
         {
@@ -100,6 +101,7 @@ partial class Build : NukeBuild
         });
 
     Target Restore => _ => _
+        .Description("Restores all nuget packages")
         .DependsOn(Clean)
         .Executes(() =>
         {
@@ -109,6 +111,7 @@ partial class Build : NukeBuild
     IEnumerable<string> ChangelogSectionNotes => ExtractChangelogSectionNotes(ChangelogFile);
 
     Target RunChangelog => _ => _
+        .Description("Updates the release notes and version number in the `ChangeLog.md`")
         .Executes(() =>
         {
             // GitVersion.SemVer appends the branch name to the version numer (this is good for pre-releases)
@@ -137,6 +140,7 @@ partial class Build : NukeBuild
             Git($"tag -f {GitVersion.SemVer}");
         });
     Target Nuget => _ => _
+      .Description("Creates nuget packages")
       .DependsOn(Tests)
       .Executes(() =>
       {
@@ -163,6 +167,7 @@ partial class Build : NukeBuild
           }
       });
     Target DockerLogin => _ => _
+        .Description("Docker login command")
         .Before(PushImage)
         .Requires(() => !DockerRegistryUrl.IsNullOrEmpty())
         .Requires(() => !DockerPassword.IsNullOrEmpty())
@@ -176,6 +181,7 @@ partial class Build : NukeBuild
             DockerTasks.DockerLogin(settings);  
         });
     Target BuildImage => _ => _
+        .Description("Build docker image")
         .DependsOn(PublishCode)
         .Executes(() =>
         {
@@ -205,6 +211,7 @@ partial class Build : NukeBuild
             }            
         });
     Target PushImage => _ => _
+        .Description("Push image to docker registry")
         .DependsOn(DockerLogin)
         .Executes(() =>
         {
@@ -225,6 +232,7 @@ partial class Build : NukeBuild
 
 
     Target PublishNuget => _ => _
+    .Description("Publishes .nuget packages to Nuget")
     .DependsOn(Nuget)
     .Requires(() => NugetPublishUrl)
     .Requires(() => !NugetKey.IsNullOrEmpty())
@@ -258,6 +266,7 @@ partial class Build : NukeBuild
         }
     });
     Target Tests => _ => _
+        .Description("Runs all the unit tests")
         .DependsOn(Compile)
         .Executes(() =>
         {
@@ -281,6 +290,7 @@ partial class Build : NukeBuild
             }
         });
     Target SignPackages => _ => _
+        .Description("Sign nuget packages")
         .DependsOn(Nuget)
         .Requires(() => !SignClientSecret.IsNullOrEmpty())
         .Requires(() => !SignClientUser.IsNullOrEmpty())
@@ -311,6 +321,7 @@ partial class Build : NukeBuild
             .ToArray();
     }
     Target PublishCode => _ => _
+        .Description("Publish project as release")
         .Executes(() =>
         {
             var dockfiles = GetDockerProjects();
@@ -324,9 +335,11 @@ partial class Build : NukeBuild
             }            
         });
    Target All => _ => _
+    .Description("Executes NBench, Tests and Nuget targets/commands")
     .DependsOn(Nuget, NBench);
 
    Target NBench => _ => _
+    .Description("Runs all BenchMarkDotNet tests")
     .DependsOn(Compile)
     .Executes(() => 
     {
@@ -355,6 +368,7 @@ partial class Build : NukeBuild
             DocFXInit(s => s.SetOutputFolder(DocFxDir).SetQuiet(true));
         });
     Target DocsMetadata => _ => _
+        .Description("Create DocFx metadata")
         .DependsOn(Compile)
         .Executes(() => 
         {
@@ -364,6 +378,7 @@ partial class Build : NukeBuild
         });
 
     Target DocFxBuild => _ => _
+        .Description("Builds Documentation")
         .DependsOn(DocsMetadata)
         .Executes(() => 
         {
@@ -373,10 +388,12 @@ partial class Build : NukeBuild
         });
 
     Target ServeDocs => _ => _
+        .Description("Build and preview documentation")
         .DependsOn(DocFxBuild)
         .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir)));
 
     Target Compile => _ => _
+        .Description("Builds all the projects in the solution")
         .DependsOn(Restore)
         .Executes(() =>
         {
@@ -390,6 +407,7 @@ partial class Build : NukeBuild
         });
 
     Target Install => _ => _
+        .Description("Install `Nuke.GlobalTool` and SignClient")
         .Executes(() =>
         {
             DotNet($@"dotnet tool install SignClient --version 1.3.155 --tool-path ""{ToolsDir}"" ");

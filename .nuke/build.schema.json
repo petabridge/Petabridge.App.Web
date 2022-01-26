@@ -61,7 +61,7 @@
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
-        "NugetUrl": {
+        "NugetPublishUrl": {
           "type": "string"
         },
         "Partition": {
@@ -111,7 +111,7 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "DocBuild",
+              "DocFxBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
@@ -147,7 +147,7 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "DocBuild",
+              "DocFxBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
