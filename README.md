@@ -12,6 +12,54 @@ To install Nuke GlobalTool and SignClient, execute the following command at the 
 build.cmd
 ```
 
+## GitHub Actions `yml` auto-generation
+
+You can define your GitHub workflows in code and Nuke will generate the YAML files for you.
+
+You can update or add to what exist in `Build.CI.GitHubActions.cs` (`AutoGenerate` has to be set to true):
+
+```csharp
+[CustomGitHubActions("pr_validation",
+    GitHubActionsImage.WindowsLatest,
+    GitHubActionsImage.UbuntuLatest,
+    AutoGenerate = true,
+    OnPushBranches = new[] { "master", "dev" },
+    OnPullRequestBranches = new[] { "master", "dev" },
+    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
+    InvokedTargets = new[] { nameof(Tests) },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    PublishArtifacts = false,
+    EnableGitHubContext = true)
+]
+
+[CustomGitHubActions("Docker_build",
+    GitHubActionsImage.UbuntuLatest,
+    AutoGenerate = true,
+    OnPushBranches = new[] { "master", "dev" },
+    OnPullRequestBranches = new[] { "master", "dev" },
+    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
+    InvokedTargets = new[] { nameof(BuildImage) },
+    ImportSecrets = new [] { "Docker_Username", "Docker_Password" },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    EnableGitHubContext = true)
+]
+[CustomGitHubActions("Windows_release",
+    GitHubActionsImage.WindowsLatest,
+    AutoGenerate = true,
+    OnPushBranches = new[] { "refs/tags/*" },
+    CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
+    InvokedTargets = new[] { nameof(BuildImage) },
+    ImportSecrets = new[] { "Nuget_Key" },
+    //causes the on push to not trigger - maybe path-ignore is the right approach!
+    //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
+    EnableGitHubContext = true)
+]
+
+```
+To generate or update existing workflow yaml file(s), execute any of the commands (e.g. `build.cmd compile`). A message will be shown on the console to accept the changes!
+
 ## Supported Build System Commands
 
 This project comes with some ready-made commands, all of which can be listed via:
