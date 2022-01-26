@@ -18,7 +18,7 @@ This project comes with some ready-made commands, all of which can be listed via
 
 ```
  build.cmd help
-``
+```
 If you desire to add more commands, please see the [Fundamentals](https://nuke.build/docs/authoring-builds/fundamentals.html).
 
 ### Summary
