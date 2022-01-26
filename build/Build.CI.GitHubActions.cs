@@ -16,7 +16,7 @@ using Nuke.Common.Utilities;
     OnPushBranches = new[] { "master", "dev" },
     OnPullRequestBranches = new[] { "master", "dev" },
     CacheKeyFiles = new[] { "global.json", "src/**/*.csproj" },
-    InvokedTargets = new[] { nameof(RunTests) },
+    InvokedTargets = new[] { nameof(Tests) },
     //causes the on push to not trigger - maybe path-ignore is the right approach!
     //OnPushExcludePaths = new[] { "docs/**/*", "package.json", "README.md" },
     PublishArtifacts = false,

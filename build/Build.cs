@@ -26,6 +26,7 @@ using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.Docker;
 using static Nuke.Common.Tools.SignClient.SignClientTasks;
 using System.Text;
+using Nuke.Common.Tools.SignClient;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -40,13 +41,15 @@ partial class Build : NukeBuild
     public static int Main() => Execute<Build>(x => x.Install);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    readonly Configuration Configuration = Configuration.Release;
 
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion(Framework = "net6.0")] readonly GitVersion GitVersion;
 
-    [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
+    [Parameter] string NugetUrl = "https://api.nuget.org/v3/index.json";
+    [Parameter] [Secret] string NugetKey;
+
     [Parameter] string SymbolsPublishUrl;
 
     [Parameter] string DockerRegistryUrl;
@@ -56,7 +59,7 @@ partial class Build : NukeBuild
     [Parameter] string SigningDescription = "My REALLY COOL Library";
     [Parameter] string SigningUrl = "https://signing.is.cool/";
 
-    [Parameter] [Secret] string NugetKey;
+    
     [Parameter] [Secret] string DockerUsername;
     [Parameter] [Secret] string DockerPassword;
 
@@ -82,7 +85,7 @@ partial class Build : NukeBuild
     static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
 
     public ChangeLog Changelog => ReadChangelog(ChangelogFile);
-
+    
     public ReleaseNotes LatestVersion => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
     public string ReleaseVersion => LatestVersion.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
@@ -133,8 +136,8 @@ partial class Build : NukeBuild
 
             Git($"tag -f {GitVersion.SemVer}");
         });
-    Target CreateNuget => _ => _
-      .DependsOn(RunTests)
+    Target Nuget => _ => _
+      .DependsOn(Tests)
       .Executes(() =>
       {
           //Since this is about a new release, `RunChangeLog` need to be executed to update the ChangeLog.md with the new version
@@ -222,14 +225,14 @@ partial class Build : NukeBuild
 
 
     Target PublishNuget => _ => _
-    .DependsOn(CreateNuget)
-    .Requires(() => NugetPublishUrl)
+    .DependsOn(Nuget)
+    .Requires(() => NugetUrl)
     .Requires(() => !NugetKey.IsNullOrEmpty())
     .Executes(() =>
     {
         var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg");
         var shouldPublishSymbolsPackages = !string.IsNullOrWhiteSpace(SymbolsPublishUrl);
-        if (!string.IsNullOrWhiteSpace(NugetPublishUrl))
+        if (!string.IsNullOrWhiteSpace(NugetUrl))
         {
             foreach (var package in packages)
             {
@@ -238,7 +241,7 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                      .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                      .SetTargetPath(package)
-                     .SetSource(NugetPublishUrl)
+                     .SetSource(NugetUrl)
                      .SetSymbolSource(SymbolsPublishUrl)
                      .SetApiKey(NugetKey));
                 }
@@ -247,14 +250,14 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                       .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                       .SetTargetPath(package)
-                      .SetSource(NugetPublishUrl)
+                      .SetSource(NugetUrl)
                       .SetApiKey(NugetKey)
                   );
                 }
             }
         }
     });
-    Target RunTests => _ => _
+    Target Tests => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
@@ -278,33 +281,28 @@ partial class Build : NukeBuild
             }
         });
     Target SignPackages => _ => _
-        .DependsOn(CreateNuget)
+        .DependsOn(Nuget)
         .Requires(() => !SignClientSecret.IsNullOrEmpty())
         .Requires(() => !SignClientUser.IsNullOrEmpty())
         .Executes(() =>
         {
-            //not sure SignClient supports .nupkg
-            //https://discoverdot.net/projects/sign-service?#user-content-supported-file-types
             var assemblies = OutputNuget.GlobFiles("*.nupkg");            
             foreach(var asm in assemblies)
             {
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append("sign");
-                stringBuilder.Append("--config");
-                stringBuilder.Append(RootDirectory / "appsettings.json");
-                stringBuilder.Append("-i");
-                stringBuilder.Append(asm);
-                stringBuilder.Append("-r");
-                stringBuilder.Append(SignClientUser);
-                stringBuilder.Append("-s");
-                stringBuilder.Append(SignClientSecret);
-                stringBuilder.Append("-n");
-                stringBuilder.Append(SigningName);
-                stringBuilder.Append("-d");
-                stringBuilder.Append(SigningDescription);
-                stringBuilder.Append("-u");
-                stringBuilder.Append(SigningUrl);
-                SignClient(stringBuilder.ToString(), workingDirectory: RootDirectory, timeout: TimeSpan.FromMinutes(5).Minutes);
+                SignClientSign(s=> s
+                .SetProcessToolPath(ToolsDir / "SignClient.exe")
+                .SetProcessLogOutput(true)                
+                .SetConfig(RootDirectory / "appsettings.json")
+                .SetDescription(SigningDescription)
+                .SetDescriptionUrl(SigningUrl)
+                .SetInput(asm)
+                .SetName(SigningName)
+                .SetSecret(SignClientSecret)
+                .SetUsername(SignClientUser)
+                .SetProcessWorkingDirectory(RootDirectory)
+                .SetProcessExecutionTimeout(TimeSpan.FromMinutes(5).Minutes));
+
+                //SignClient(stringBuilder.ToString(), workingDirectory: RootDirectory, timeout: TimeSpan.FromMinutes(5).Minutes);
             }
         });
     private AbsolutePath[] GetDockerProjects()
@@ -326,10 +324,10 @@ partial class Build : NukeBuild
             }            
         });
    Target All => _ => _
-    .DependsOn(CreateNuget);
+    .DependsOn(Nuget, NBench);
+
    Target NBench => _ => _
     .DependsOn(Compile)
-    //.WhenSkipped(DependencyBehavior.Skip)
     .Executes(() => 
     {
         RootDirectory
@@ -398,7 +396,7 @@ partial class Build : NukeBuild
             DotNet($"tool install Nuke.GlobalTool --global");
         });
 
-
+    
     static void Information(string info)
     {
         Serilog.Log.Information(info);

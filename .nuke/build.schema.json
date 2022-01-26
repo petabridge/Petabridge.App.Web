@@ -61,7 +61,7 @@
           "type": "string",
           "default": "Secrets must be entered via 'nuke :secret [profile]'"
         },
-        "NugetPublishUrl": {
+        "NugetUrl": {
           "type": "string"
         },
         "Partition": {
@@ -111,21 +111,21 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "CreateNuget",
               "DocBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
               "Install",
               "NBench",
+              "Nuget",
               "PublishCode",
               "PublishNuget",
               "PushImage",
               "Restore",
               "RunChangelog",
-              "RunTests",
               "ServeDocs",
-              "SignPackages"
+              "SignPackages",
+              "Tests"
             ]
           }
         },
@@ -147,21 +147,21 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "CreateNuget",
               "DocBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
               "Install",
               "NBench",
+              "Nuget",
               "PublishCode",
               "PublishNuget",
               "PushImage",
               "Restore",
               "RunChangelog",
-              "RunTests",
               "ServeDocs",
-              "SignPackages"
+              "SignPackages",
+              "Tests"
             ]
           }
         },
