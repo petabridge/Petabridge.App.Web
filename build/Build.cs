@@ -345,25 +345,22 @@ partial class Build : NukeBuild
     .Description("Executes NBench, Tests and Nuget targets/commands")
     .DependsOn(Nuget, NBench);
 
-   Target NBench => _ => _
+    Target NBench => _ => _
     .Description("Runs all BenchMarkDotNet tests")
     .DependsOn(Compile)
-    .Executes(() => 
+    .Executes(() =>
     {
         RootDirectory
             .GlobFiles("src/**/*.Tests.Performance.csproj")
-            .ForEach(path => 
+            .ForEach(path =>
             {
-                BenchmarkDotNet($"--nobuild --concurrent true --trace true --output {OutputPerfTests}", workingDirectory: Directory.GetParent(path).FullName, timeout: TimeSpan.FromMinutes(30).Minutes, logOutput: true);
-                /*BenchmarkDotNet(b => b
-                    .SetProcessWorkingDirectory(Directory.GetParent(path).FullName)                    
-                    .SetAffinity(1)
-                    .SetDisassembly(true)
-                    .SetDisassemblyDiff(true)
-                    .SetExporters(BenchmarkDotNetExporter.GitHub, BenchmarkDotNetExporter.CSV));*/
-
+                DotNetRun(s => s
+                .SetApplicationArguments($"--no-build -c release --concurrent true --trace true --output {OutputPerfTests} --diagnostic")
+                .SetProcessLogOutput(true)
+                .SetProcessWorkingDirectory(Directory.GetParent(path).FullName)
+                .SetProcessExecutionTimeout((int)TimeSpan.FromMinutes(30).TotalMilliseconds)
+                );
             });
-
     });
     //--------------------------------------------------------------------------------
     // Documentation 
