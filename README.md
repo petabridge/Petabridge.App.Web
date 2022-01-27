@@ -58,7 +58,8 @@ You can update or add to what exist in `Build.CI.GitHubActions.cs` (`AutoGenerat
 ]
 
 ```
-To generate or update existing workflow yaml file(s), execute any of the commands (e.g. `build.cmd compile`).
+To generate or update existing workflow yaml file(s), execute any of the commands (e.g. `build.cmd compile`):
+
 ```shell
 PS C:\Users\User\source\repos\Petabridge.App.Web> .\build.cmd compile
 PowerShell Desktop version 5.1.19041.1320
@@ -70,6 +71,13 @@ Microsoft (R) .NET Core SDK version 6.0.101
 11:42:28 [WRN] Configuration files for GitHubActions (pr_validation) have changed.
 11:42:28 [WRN] Configuration files for GitHubActions (Docker_build) have changed.
 Press any key to continue ...​
+
+███╗   ██╗██╗   ██╗██╗  ██╗███████╗
+████╗  ██║██║   ██║██║ ██╔╝██╔════╝
+██╔██╗ ██║██║   ██║█████╔╝ █████╗  
+██║╚██╗██║██║   ██║██╔═██╗ ██╔══╝  
+██║ ╚████║╚██████╔╝██║  ██╗███████╗
+╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
 ```
 
 ## Supported Build System Commands
