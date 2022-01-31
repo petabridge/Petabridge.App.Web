@@ -79,6 +79,10 @@
             "type": "string"
           }
         },
+        "ReleaseBranch": {
+          "type": "string",
+          "description": "The final release branch"
+        },
         "Root": {
           "type": "string",
           "description": "Root directory during build execution"
@@ -111,21 +115,23 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "CreateNuget",
-              "DocBuild",
+              "DocFxBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
               "Install",
               "NBench",
+              "Nuget",
               "PublishCode",
               "PublishNuget",
               "PushImage",
               "Restore",
               "RunChangelog",
-              "RunTests",
               "ServeDocs",
-              "SignPackages"
+              "SignAndPublishPackage",
+              "SignClient",
+              "SignPackages",
+              "Tests"
             ]
           }
         },
@@ -147,21 +153,23 @@
               "BuildImage",
               "Clean",
               "Compile",
-              "CreateNuget",
-              "DocBuild",
+              "DocFxBuild",
               "DockerLogin",
               "DocsInit",
               "DocsMetadata",
               "Install",
               "NBench",
+              "Nuget",
               "PublishCode",
               "PublishNuget",
               "PushImage",
               "Restore",
               "RunChangelog",
-              "RunTests",
               "ServeDocs",
-              "SignPackages"
+              "SignAndPublishPackage",
+              "SignClient",
+              "SignPackages",
+              "Tests"
             ]
           }
         },
