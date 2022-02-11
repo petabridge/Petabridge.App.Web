@@ -19,7 +19,7 @@
     <TestSdkVersion>17.0.0</TestSdkVersion>
     <AkkaVersion>1.4.32</AkkaVersion>
     <PbmVersion>1.0.2</PbmVersion>
-    <FluentAssertionsVersion>6.4.0</FluentAssertionsVersion>
+    <FluentAssertionsVersion>6.5.0</FluentAssertionsVersion>
     <AkkaBootstrapDockerVersion>0.5.2</AkkaBootstrapDockerVersion>
   </PropertyGroup>
 </Project>
