@@ -1,9 +1,9 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <Copyright>Copyright © 2019 Your Company</Copyright>
     <Authors>Your Authors</Authors>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <VersionPrefix>0.3.0</VersionPrefix>
+    <PackageReleaseNotes>• First release</PackageReleaseNotes>
     <PackageIconUrl>
     </PackageIconUrl>
     <PackageProjectUrl>
