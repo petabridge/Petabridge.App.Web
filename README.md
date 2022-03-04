@@ -85,15 +85,17 @@ If you desire to add more commands, please see the [Fundamentals](https://nuke.b
 
 The ready-made commands you can start working with (both on **Windows** and **Linux**), are detailed as follows:
 
-* `build.cmd all` - runs the following commands: `NBench`, `Tests`, and `Nuget`.
+* `build.cmd SetFilePermission` - fixes file permission exception you may encounter.
+* `build.cmd Install` - installs Nuke.GlobalTool - which is the default when no command is passed.
+* `build.cmd all` - runs the following commands: `BuildRelease`, `RunTests`, `NBench` and `Nuget`.
 * `build.cmd compile` - compiles the solution in `Release` mode. The default mode is `Release`, to compile in `Debug` mode => `--configuration debug`
+* `build.cmd buildrelease` - compiles the solution in `Release` mode.
 * `build.cmd runtests` - compiles the solution in `Release` mode and runs the unit test suite (all projects that end with the `.Tests.csproj` suffix). All of the output will be published to the `./TestResults` folder.
 * `build.cmd nbench` - compiles the solution in `Release` mode and runs the [NBench](https://nbench.io/) performance test suite (all projects that end with the `.Tests.Performance.csproj` suffix). All of the output will be published to the `./PerfResults` folder.
-* `build.cmd nuget` - compiles the solution in `Release` mode and creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set and uses the version number from `GitVersion.SemVer`.
-* `build.cmd signpackages --SignClientUser $(signingUsername) --SignClientSecret $(signingPassword)` - compiles the solution in `Release` modem creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set using the version number from `GitVersion.SemVer`, and then signs those packages using the SignClient data below.
-* `build.cmd signandpublishpackage --SignClientUser $(signingUsername) --SignClientSecret $(signingPassword) --nugetpublishurl $(nugetUrl) --nugetkey $(nugetKey)` - compiles the solution in `Release` modem creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set using the version number from `GitVersion.SemVer`, signs those packages using the SignClient data below, and then publishes those packages to the `$(nugetUrl)` using NuGet key `$(nugetKey)`.
-* `build.cmd docfxBuild` - compiles the solution in `Release` mode and then uses [DocFx](http://dotnet.github.io/docfx/) to generate website documentation inside the `./docs/_site` folder. Execute `build.cmd servedocs` after build is done to preview the documentation.
-* `build.cmd buildAndServeDocs` - this combines `build.cmd docfxBuild` and ``build.cmd servedocs` in one go!
+* `build.cmd nuget` - compiles the solution in `Release` mode and creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set and uses the version number from `RELEASE_NOTES.md`.
+* `build.cmd nuget --nugetprerelease dev` - compiles the solution in `Release` mode and creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set - but in this instance all projects will have a `VersionSuffix` of `-beta{DateTime.UtcNow.Ticks}`. It's typically used for publishing nightly releases.
+* `build.cmd nuget --nugetpublishurl $(nugetUrl) --nugetkey $(nugetKey)` - compiles the solution in `Release` modem creates Nuget packages from any project that does not have `<IsPackable>false</IsPackable>` set using the version number from `RELEASE_NOTES.md` then publishes those packages to the `$(nugetUrl)` using NuGet key `$(nugetKey)`.
+* `build.cmd DocFx` - compiles the solution in `Release` mode and then uses [DocFx](http://dotnet.github.io/docfx/) to generate website documentation inside the `./docs/_site` folder. Use the `build.cmd servedocs` on Windows to preview the documentation.
 
 This build script is powered by [NUKE](https://nuke.build/); please see their API documentation should you need to make any changes to the [`build.cs`](/build/build.cs) file.
 

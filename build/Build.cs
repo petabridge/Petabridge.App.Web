@@ -21,7 +21,7 @@ using Nuke.Common.ChangeLog;
 using System.Collections.Generic;
 using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.Docker;
-using static Nuke.Common.Tools.SignClient.SignClientTasks;
+using static Nuke.Common.Tools.Git.GitTasks;
 using Nuke.Common.Tools.SignClient;
 
 [CheckBuildProjectConfigurations]
@@ -53,18 +53,10 @@ partial class Build : NukeBuild
     [Parameter] string DockerRegistryUrl;
 
     [Parameter] int Port = 8090;
-
-    // Metadata used when signing packages and DLLs
-    [Parameter] string SigningName = "My Library";
-    [Parameter] string SigningDescription = "My REALLY COOL Library";
-    [Parameter] string SigningUrl = "https://signing.is.cool/";
-
-    
+        
     [Parameter] [Secret] string DockerUsername;
     [Parameter] [Secret] string DockerPassword;
 
-    [Parameter] [Secret] string SignClientSecret;
-    [Parameter] [Secret] string SignClientUser;
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
     AbsolutePath Output => RootDirectory / "bin";
@@ -208,8 +200,9 @@ partial class Build : NukeBuild
 
     Target PublishNuget => _ => _
     .Description("Publishes .nuget packages to Nuget")
-    .Requires(() => NugetPublishUrl)
-    .Requires(() => !NugetKey.IsNullOrEmpty())
+    .After(CreateNuget)
+    .OnlyWhenDynamic(() => !NugetPublishUrl.IsNullOrEmpty())
+    .OnlyWhenDynamic(() => !NugetKey.IsNullOrEmpty())
     .Executes(() =>
     {
         var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg").NotNull();
@@ -263,36 +256,8 @@ partial class Build : NukeBuild
                 }
             }
         });
-    Target SignClient => _ => _
-        .Unlisted()
-        .Before(PublishNuget)
-        .Requires(() => !SignClientSecret.IsNullOrEmpty())
-        .Requires(() => !SignClientUser.IsNullOrEmpty())
-        .Executes(() =>
-        {
-            var assemblies = OutputNuget.GlobFiles("*.nupkg");
-            foreach (var asm in assemblies)
-            {
-                SignClientSign(s => s
-                .SetProcessToolPath(ToolsDir / "SignClient.exe")
-                .SetProcessLogOutput(true)
-                .SetConfig(RootDirectory / "appsettings.json")
-                .SetDescription(SigningDescription)
-                .SetDescriptionUrl(SigningUrl)
-                .SetInput(asm)
-                .SetName(SigningName)
-                .SetSecret(SignClientSecret)
-                .SetUsername(SignClientUser)
-                .SetProcessWorkingDirectory(RootDirectory)
-                .SetProcessExecutionTimeout(TimeSpan.FromMinutes(5).Minutes));
-
-                //SignClient(stringBuilder.ToString(), workingDirectory: RootDirectory, timeout: TimeSpan.FromMinutes(5).Minutes);
-            }
-        });
-    Target SignPackages => _ => _
-    .DependsOn(CreateNuget, SignClient);
     Target Nuget => _ => _
-        .DependsOn(SignPackages, PublishNuget);
+        .DependsOn(CreateNuget, PublishNuget);
     private AbsolutePath[] GetDockerProjects()
     {
         return SourceDirectory.GlobFiles("**/Dockerfile")// folders with Dockerfiles in it
@@ -356,7 +321,7 @@ partial class Build : NukeBuild
             .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
-    Target DocFxBuild => _ => _
+    Target DocFx => _ => _
         .Description("Builds Documentation")
         .DependsOn(DocsMetadata)
         .Executes(() => 
@@ -366,11 +331,9 @@ partial class Build : NukeBuild
             .SetLogLevel(DocFXLogLevel.Verbose));
         });
 
-    Target BuildAndServeDocs => _ => _
-    .DependsOn(DocFxBuild, ServeDocs);
-
     Target ServeDocs => _ => _
         .Description("Build and preview documentation")
+        .DependsOn(DocFx)
         .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir).SetPort(Port)));
 
     Target Compile => _ => _
@@ -399,12 +362,19 @@ partial class Build : NukeBuild
             XmlTasks.XmlPoke(SourceDirectory / "Directory.Build.props", "//Project/PropertyGroup/VersionPrefix", ReleaseVersion);
 
         });
+    Target SetFilePermission => _ => _
+    .Description("User may experience PERMISSION issues - this target be used to fix that!")
+    .Executes(() =>
+    {
+        Git($"update-index --chmod=+x {RootDirectory}/build.cmd");
+        Git($"update-index --chmod=+x {RootDirectory}/build.sh");
+    });
     Target Install => _ => _
         .Description("Install `Nuke.GlobalTool` and SignClient")
+        .Triggers(SetFilePermission)
         .Executes(() =>
         {
-            DotNet($@"dotnet tool install SignClient --version 1.3.155 --tool-path ""{ToolsDir}"" ");
-            DotNet($"tool install Nuke.GlobalTool --global");
+            DotNet($"tool install Nuke.GlobalTool --global");            
         });
     
     static void Information(string info)
