@@ -60,7 +60,14 @@ class CustomGitHubActionsAttribute : GitHubActionsAttribute
                 Version = version
             });
         }
-
+        newSteps.Insert(1, new GitHubActionsSetupChmod
+        {
+            File = "build.cmd"
+        });
+        newSteps.Insert(1, new GitHubActionsSetupChmod
+        {
+            File = "build.sh"
+        });
         job.Steps = newSteps.ToArray();
         return job;
     }
@@ -81,6 +88,20 @@ class GitHubActionsSetupDotNetStep : GitHubActionsStep
             {
                 writer.WriteLine($"dotnet-version: {Version}");
             }
+        }
+    }
+}
+
+class GitHubActionsSetupChmod : GitHubActionsStep
+{
+    public string File { get; init; }
+
+    public override void Write(CustomFileWriter writer)
+    {
+        writer.WriteLine($"- name: Make {File} executable");
+        using (writer.Indent())
+        {
+            writer.WriteLine($"run: chmod +x ./{File}");
         }
     }
 }
