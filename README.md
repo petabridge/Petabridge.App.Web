@@ -85,7 +85,6 @@ If you desire to add more commands, please see the [Fundamentals](https://nuke.b
 
 The ready-made commands you can start working with (both on **Windows** and **Linux**), are detailed as follows:
 
-* `build.cmd SetFilePermission` - fixes file permission exception you may encounter.
 * `build.cmd Install` - installs Nuke.GlobalTool - which is the default when no command is passed.
 * `build.cmd all` - runs the following commands: `BuildRelease`, `RunTests`, `NBench` and `Nuget`.
 * `build.cmd compile` - compiles the solution in `Release` mode. The default mode is `Release`, to compile in `Debug` mode => `--configuration debug`
