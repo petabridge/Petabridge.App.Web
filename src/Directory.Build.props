@@ -12,6 +12,9 @@
     </PackageLicenseUrl>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
+	<ItemGroup>
+		<None Include="$(MSBuildThisFileDirectory)\..\README.md" Pack="true" Visible="false" PackagePath="\" />
+	</ItemGroup>
   <PropertyGroup>
     <NetCoreFramework>net6.0</NetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>

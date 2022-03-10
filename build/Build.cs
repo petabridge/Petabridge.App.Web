@@ -23,6 +23,8 @@ using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.Docker;
 using static Nuke.Common.Tools.Git.GitTasks;
 using Nuke.Common.Tools.SignClient;
+using Octokit;
+using Nuke.Common.Utilities;
 
 [CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
@@ -46,16 +48,19 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository GitRepository;
 
     [Parameter] string NugetPublishUrl = "https://api.nuget.org/v3/index.json";
-    [Parameter] [Secret] string NugetKey;
+    [Parameter][Secret] string NugetKey;
 
     [Parameter] string SymbolsPublishUrl;
+
+    [Parameter][Secret] string GitHubToken;
+    GitHubClient GitHubClient;
 
     [Parameter] string DockerRegistryUrl;
 
     [Parameter] int Port = 8090;
-        
-    [Parameter] [Secret] string DockerUsername;
-    [Parameter] [Secret] string DockerPassword;
+
+    [Parameter][Secret] string DockerUsername;
+    [Parameter][Secret] string DockerPassword;
 
     // Directories
     AbsolutePath ToolsDir => RootDirectory / "tools";
@@ -145,7 +150,7 @@ partial class Build : NukeBuild
                 .SetServer(DockerRegistryUrl)
                 .SetUsername(DockerUsername)
                 .SetPassword(DockerPassword);
-            DockerTasks.DockerLogin(settings);  
+            DockerTasks.DockerLogin(settings);
         });
     Target BuildDockerImages => _ => _
         .Description("Build docker image")
@@ -173,7 +178,7 @@ partial class Build : NukeBuild
                  .SetPath(Directory.GetParent(dockfile).FullName)
                  .SetTag(tags.ToArray());
                 DockerTasks.DockerBuild(settings);
-            }            
+            }
         });
     Target PushImage => _ => _
         .Description("Push image to docker registry")
@@ -203,6 +208,7 @@ partial class Build : NukeBuild
     .After(CreateNuget)
     .OnlyWhenDynamic(() => !NugetPublishUrl.IsNullOrEmpty())
     .OnlyWhenDynamic(() => !NugetKey.IsNullOrEmpty())
+    .Triggers(GitHubRelease)
     .Executes(() =>
     {
         var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg").NotNull();
@@ -232,6 +238,62 @@ partial class Build : NukeBuild
             }
         }
     });
+
+    Target AuthenticatedGitHubClient => _ => _
+        .Unlisted()
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .Executes(() =>
+        {
+            GitHubClient = new GitHubClient(new ProductHeaderValue("nuke-build"))
+            {
+                Credentials = new Credentials(GitHubToken, AuthenticationType.Bearer)
+            };
+        });
+    Target GitHubRelease => _ => _
+        .Unlisted()
+        .Description("Creates a GitHub release (or amends existing) and uploads the artifact")
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .DependsOn(AuthenticatedGitHubClient)
+        .Executes(async () =>
+        {
+            var version = ReleaseNotes.Version.ToString();
+            var releaseNotes = GetNuGetReleaseNotes(ChangelogFile);
+            Release release;
+            var releaseName = $"{version}";
+            if (!VersionSuffix.IsNullOrWhiteSpace())
+                releaseName = $"{version}-{VersionSuffix}";
+            var identifier = GitRepository.Identifier.Split("/");
+            var (gitHubOwner, repoName) = (identifier[0], identifier[1]);
+            try
+            {
+                release = await GitHubClient.Repository.Release.Get(gitHubOwner, repoName, releaseName);
+            }
+            catch (NotFoundException)
+            {
+                var newRelease = new NewRelease(releaseName)
+                {
+                    Body = releaseNotes,
+                    Name = releaseName,
+                    Draft = false,
+                    Prerelease = GitRepository.IsOnReleaseBranch()
+                };
+                release = await GitHubClient.Repository.Release.Create(gitHubOwner, repoName, newRelease);
+            }
+
+            foreach (var existingAsset in release.Assets)
+            {
+                await GitHubClient.Repository.Release.DeleteAsset(gitHubOwner, repoName, existingAsset.Id);
+            }
+
+            Information($"GitHub Release {releaseName}");
+            var packages = OutputNuget.GlobFiles("*.nupkg", "*.symbols.nupkg").NotNull();
+            foreach (var artifact in packages)
+            {
+                var releaseAssetUpload = new ReleaseAssetUpload(artifact.Name, "application/zip", File.OpenRead(artifact), null);
+                var releaseAsset = await GitHubClient.Repository.Release.UploadAsset(release, releaseAssetUpload);
+                Information($"  {releaseAsset.BrowserDownloadUrl}");
+            }
+        });
     Target RunTests => _ => _
         .Description("Runs all the unit tests")
         .DependsOn(Compile)
@@ -270,18 +332,18 @@ partial class Build : NukeBuild
         .Executes(() =>
         {
             var dockfiles = GetDockerProjects();
-            foreach(var dockfile in dockfiles)
+            foreach (var dockfile in dockfiles)
             {
                 Information(dockfile.Parent.ToString());
                 var project = dockfile.Parent.GlobFiles("*.csproj").First();
                 DotNetPublish(s => s
                 .SetProject(project)
                 .SetConfiguration(Configuration.Release));
-            }            
+            }
         });
-   Target All => _ => _
-    .Description("Executes NBench, Tests and Nuget targets/commands")
-    .DependsOn(BuildRelease, RunTests, NBench, Nuget);
+    Target All => _ => _
+     .Description("Executes NBench, Tests and Nuget targets/commands")
+     .DependsOn(BuildRelease, RunTests, NBench, Nuget);
 
     Target NBench => _ => _
     .Description("Runs all BenchMarkDotNet tests")
@@ -314,7 +376,7 @@ partial class Build : NukeBuild
         .Unlisted()
         .Description("Create DocFx metadata")
         .DependsOn(Compile)
-        .Executes(() => 
+        .Executes(() =>
         {
             DocFXMetadata(s => s
             .SetProjects(DocFxDirJson)
@@ -324,7 +386,7 @@ partial class Build : NukeBuild
     Target DocFx => _ => _
         .Description("Builds Documentation")
         .DependsOn(DocsMetadata)
-        .Executes(() => 
+        .Executes(() =>
         {
             DocFXBuild(s => s
             .SetConfigFile(DocFxDirJson)
@@ -334,7 +396,7 @@ partial class Build : NukeBuild
     Target ServeDocs => _ => _
         .Description("Build and preview documentation")
         .DependsOn(DocFx)
-        .Executes(() => DocFXServe(s=>s.SetFolder(DocFxDir).SetPort(Port)));
+        .Executes(() => DocFXServe(s => s.SetFolder(DocFxDir).SetPort(Port)));
 
     Target Compile => _ => _
         .Description("Builds all the projects in the solution")
@@ -345,7 +407,7 @@ partial class Build : NukeBuild
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(version)
+                //.SetAssemblyVersion(version)
                 .SetFileVersion(version)
                 .SetVersion(version)
                 .EnableNoRestore());
@@ -366,9 +428,9 @@ partial class Build : NukeBuild
         .Description("Install `Nuke.GlobalTool` and SignClient")
         .Executes(() =>
         {
-            DotNet($"tool install Nuke.GlobalTool --global");            
+            DotNet($"tool install Nuke.GlobalTool --global");
         });
-    
+
     static void Information(string info)
     {
         Serilog.Log.Information(info);

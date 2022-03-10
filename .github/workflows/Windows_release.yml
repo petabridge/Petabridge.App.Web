@@ -18,8 +18,8 @@ name: Windows_release
 
 on:
   push:
-    branches:
-      - 'refs/tags/*'
+    tags:
+      - '*'
 
 jobs:
   windows-latest:
@@ -48,4 +48,5 @@ jobs:
         run: ./build.cmd Nuget
         env:
           Nuget_Key: ${{ secrets.NUGET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_CONTEXT: ${{ toJSON(github) }}
