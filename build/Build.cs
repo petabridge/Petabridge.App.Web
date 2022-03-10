@@ -133,8 +133,6 @@ partial class Build : NukeBuild
                   .SetVersionPrefix(version)
                   .SetVersionSuffix(VersionSuffix)
                   .SetPackageReleaseNotes(releaseNotes)
-                  .SetDescription("YOUR_DESCRIPTION_HERE")
-                  .SetPackageProjectUrl("YOUR_PACKAGE_URL_HERE")
                   .SetOutputDirectory(OutputNuget));
           }
       });
