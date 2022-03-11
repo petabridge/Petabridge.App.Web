@@ -398,24 +398,22 @@ partial class Build : NukeBuild
 
     Target Compile => _ => _
         .Description("Builds all the projects in the solution")
-        .DependsOn(Restore)
+        .DependsOn(AssemblyInfo, Restore)
         .Executes(() =>
         {
             var version = ReleaseNotes.Version.ToString();
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                //.SetAssemblyVersion(version)
-                .SetFileVersion(version)
-                .SetVersion(version)
                 .EnableNoRestore());
         });
 
 
     Target BuildRelease => _ => _
-    .DependsOn(Clean, AssemblyInfo, Compile);
+    .DependsOn(Compile);
 
     Target AssemblyInfo => _ => _
+        .After(Restore)
         .Executes(() =>
         {
             XmlTasks.XmlPoke(SourceDirectory / "Directory.Build.props", "//Project/PropertyGroup/PackageReleaseNotes", GetNuGetReleaseNotes(ChangelogFile));
