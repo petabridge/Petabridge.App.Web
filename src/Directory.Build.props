@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <Copyright>Copyright © 2019 Your Company</Copyright>
+    <Copyright>Copyright © 2022 Your Company</Copyright>
     <Authors>Your Authors</Authors>
     <VersionPrefix>0.3.0</VersionPrefix>
     <PackageReleaseNotes>• First release</PackageReleaseNotes>
@@ -21,8 +21,9 @@
     <XunitVersion>2.4.1</XunitVersion>
     <TestSdkVersion>17.2.0</TestSdkVersion>
     <AkkaVersion>1.4.39</AkkaVersion>
-    <PbmVersion>1.0.2</PbmVersion>
+    <PbmVersion>1.1.0</PbmVersion>
+     <AkkaHostingVersion>0.3.1</AkkaHostingVersion>
     <FluentAssertionsVersion>6.7.0</FluentAssertionsVersion>
-    <AkkaBootstrapDockerVersion>0.5.2</AkkaBootstrapDockerVersion>
+    <MicrosoftExtensionsVersion>6.0.1</MicrosoftExtensionsVersion>
   </PropertyGroup>
 </Project>

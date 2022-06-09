@@ -150,19 +150,3 @@ build.cmd servedocs
 ```
 
 This will use the built-in `docfx.console` binary that is installed as part of the NuGet restore process from executing the above command to preview the fully-rendered documentation. For best results, do this immediately after calling `build.cmd compile`.
-
-### Code Signing via SignService
-This project uses [SignService](https://github.com/onovotny/SignService) to code-sign NuGet packages prior to publication. The `build.cmd` scripts will automatically download the `SignClient` needed to execute code signing locally on the build agent, but it's still your responsibility to set up the SignService server per the instructions at the linked repository.
-
-Once you've gone through the ropes of setting up a code-signing server, you'll need to set a few configuration options in your project in order to use the `SignClient`:
-
-* Add your Active Directory settings to [`appsettings.json`](appsettings.json) and
-* Pass in your signature information to the `SigningName`, `SigningDescription`, and `SigningUrl` values inside `build.cs`.
-
-Whenever you're ready to run code-signing on the NuGet packages published by `build.cs`, execute the following command:
-
-```
-build.cmd signpackages --SignClientSecret {your secret} --SignClientUser {your username}
-```
-
-This will invoke the `SignClient` and actually execute code signing against your `.nupkg` files prior to NuGet publication.
