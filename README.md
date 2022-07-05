@@ -26,8 +26,7 @@ You can update or add to what exist in `Build.CI.GitHubActions.cs` (`AutoGenerat
     OnPushBranches = new[] { "master", "dev" },
     OnPullRequestBranches = new[] { "master", "dev" },
     InvokedTargets = new[] { nameof(RunTests) },
-    PublishArtifacts = true,
-    EnableGitHubContext = true)
+    PublishArtifacts = true)
 ]
 
 [CustomGitHubActions("Docker_build",
@@ -37,8 +36,7 @@ You can update or add to what exist in `Build.CI.GitHubActions.cs` (`AutoGenerat
     OnPullRequestBranches = new[] { "master", "dev" },
     InvokedTargets = new[] { nameof(Docker) },
     ImportSecrets = new [] { "Docker_Username", "Docker_Password" },
-    PublishArtifacts = true,
-    EnableGitHubContext = true)
+    PublishArtifacts = true)
 ]
 [CustomGitHubActions("Windows_release",
     GitHubActionsImage.WindowsLatest,
@@ -46,8 +44,7 @@ You can update or add to what exist in `Build.CI.GitHubActions.cs` (`AutoGenerat
     OnPushBranches = new[] { "refs/tags/*" },
     InvokedTargets = new[] { nameof(Nuget) },
     ImportSecrets = new[] { "Nuget_Key" }, 
-    PublishArtifacts = true,
-    EnableGitHubContext = true)
+    PublishArtifacts = true)
 ]
 ```
 To generate or update existing workflow yaml file(s), execute any of the commands (e.g. `build.cmd compile`):
