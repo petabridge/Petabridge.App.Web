@@ -25,6 +25,7 @@ using static Nuke.Common.Tools.Git.GitTasks;
 using Nuke.Common.Tools.SignClient;
 using Octokit;
 using Nuke.Common.Utilities;
+using Nuke.Common.CI.GitHubActions;
 
 [ShutdownDotNetAfterServerBuild]
 [DotNetVerbosityMapping]
@@ -77,19 +78,21 @@ partial class Build : NukeBuild
 
     readonly Solution Solution = ProjectModelTasks.ParseSolution(RootDirectory.GlobFiles("*.sln").FirstOrDefault());
 
-    static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ?
-        null
-        : JsonSerializer.Deserialize<JsonElement>(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT"));
-
-    static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
-
-    static readonly string PreReleaseVersionSuffix = "beta" + (BuildNumber > 0 ? BuildNumber : DateTime.UtcNow.Ticks.ToString());
+    GitHubActions GitHubActions => GitHubActions.Instance;
+    private long BuildNumber()
+    {
+        return GitHubActions.RunNumber;
+    }
+    private string PreReleaseVersionSuffix()
+    {
+        return "beta" + (BuildNumber() > 0 ? BuildNumber() : DateTime.UtcNow.Ticks.ToString());
+    }
     public ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     public ReleaseNotes ReleaseNotes => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
 
     private string VersionFromReleaseNotes => ReleaseNotes.Version.IsPrerelease ? ReleaseNotes.Version.OriginalVersion : "";
-    private string VersionSuffix => NugetPrerelease == "dev" ? PreReleaseVersionSuffix : NugetPrerelease == "" ? VersionFromReleaseNotes : NugetPrerelease;
+    private string VersionSuffix => NugetPrerelease == "dev" ? PreReleaseVersionSuffix() : NugetPrerelease == "" ? VersionFromReleaseNotes : NugetPrerelease;
     public string ReleaseVersion => ReleaseNotes.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
     Target Clean => _ => _
@@ -123,6 +126,9 @@ partial class Build : NukeBuild
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach (var project in projects)
           {
+              Information(BuildNumber().ToString());
+              Information(PreReleaseVersionSuffix());
+              Information(VersionSuffix);
               DotNetPack(s => s
                   .SetProject(project)
                   .SetConfiguration(Configuration)
