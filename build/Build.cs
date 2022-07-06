@@ -54,7 +54,6 @@ partial class Build : NukeBuild
 
     [Parameter] string SymbolsPublishUrl;
 
-    [Parameter][Secret] string GitHubToken;
     GitHubClient GitHubClient;
 
     [Parameter] string DockerRegistryUrl;
@@ -204,7 +203,11 @@ partial class Build : NukeBuild
     public Target PublishDockerImages => _ => _
     .DependsOn(DockerLogin, Docker, PushImage);
 
-
+    private string[] platforms = new[]
+    {
+        "win-x86", "win-x64", "win-arm", "win-arm64",
+        "linux-x64","linux-arm","osx-x64"
+    };
     Target PublishNuget => _ => _
     .Description("Publishes .nuget packages to Nuget")
     .After(CreateNuget)
@@ -225,6 +228,10 @@ partial class Build : NukeBuild
                      .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                      .SetTargetPath(package)
                      .SetSource(NugetPublishUrl)
+                     //.SetRuntime(platform)
+                     //.SetSelfContained(false)
+                     //.SetPublishSingleFile(true)
+                     //.SetPublishTrimmed(false)
                      .SetSymbolSource(SymbolsPublishUrl)
                      .SetApiKey(NugetKey));
                 }
@@ -233,6 +240,10 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                       .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                       .SetTargetPath(package)
+                      //.SetRuntime(platform)
+                      //.SetSelfContained(false)
+                      //.SetPublishSingleFile(true)
+                      //.SetPublishTrimmed(false)
                       .SetSource(NugetPublishUrl)
                       .SetApiKey(NugetKey)
                   );
@@ -243,27 +254,30 @@ partial class Build : NukeBuild
 
     Target AuthenticatedGitHubClient => _ => _
         .Unlisted()
-        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubActions.Token))
         .Executes(() =>
         {
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuke-build"))
             {
-                Credentials = new Credentials(GitHubToken, AuthenticationType.Bearer)
+                Credentials = new Credentials(GitHubActions.Token, AuthenticationType.Bearer)
             };
         });
     Target GitHubRelease => _ => _
         .Unlisted()
         .Description("Creates a GitHub release (or amends existing) and uploads the artifact")
-        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubActions.Token))
         .DependsOn(AuthenticatedGitHubClient)
         .Executes(async () =>
         {
             var version = ReleaseNotes.Version.ToString();
             var releaseNotes = GetNuGetReleaseNotes(ChangelogFile);
             Release release;
+
             var releaseName = $"{version}";
+
             if (!VersionSuffix.IsNullOrWhiteSpace())
                 releaseName = $"{version}-{VersionSuffix}";
+
             var identifier = GitRepository.Identifier.Split("/");
             var (gitHubOwner, repoName) = (identifier[0], identifier[1]);
             try
