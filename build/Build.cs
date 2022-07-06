@@ -126,9 +126,6 @@ partial class Build : NukeBuild
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach (var project in projects)
           {
-              Information(BuildNumber().ToString());
-              Information(PreReleaseVersionSuffix());
-              Information(VersionSuffix);
               DotNetPack(s => s
                   .SetProject(project)
                   .SetConfiguration(Configuration)
