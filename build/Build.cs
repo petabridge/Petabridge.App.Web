@@ -202,12 +202,7 @@ partial class Build : NukeBuild
     .DependsOn(BuildDockerImages);
     public Target PublishDockerImages => _ => _
     .DependsOn(DockerLogin, Docker, PushImage);
-
-    private string[] platforms = new[]
-    {
-        "win-x86", "win-x64", "win-arm", "win-arm64",
-        "linux-x64","linux-arm","osx-x64"
-    };
+        
     Target PublishNuget => _ => _
     .Description("Publishes .nuget packages to Nuget")
     .After(CreateNuget)
@@ -228,10 +223,6 @@ partial class Build : NukeBuild
                      .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                      .SetTargetPath(package)
                      .SetSource(NugetPublishUrl)
-                     //.SetRuntime(platform)
-                     //.SetSelfContained(false)
-                     //.SetPublishSingleFile(true)
-                     //.SetPublishTrimmed(false)
                      .SetSymbolSource(SymbolsPublishUrl)
                      .SetApiKey(NugetKey));
                 }
@@ -240,10 +231,6 @@ partial class Build : NukeBuild
                     DotNetNuGetPush(s => s
                       .SetTimeout(TimeSpan.FromMinutes(10).Minutes)
                       .SetTargetPath(package)
-                      //.SetRuntime(platform)
-                      //.SetSelfContained(false)
-                      //.SetPublishSingleFile(true)
-                      //.SetPublishTrimmed(false)
                       .SetSource(NugetPublishUrl)
                       .SetApiKey(NugetKey)
                   );
