@@ -26,6 +26,7 @@ using Nuke.Common.Tools.SignClient;
 using Octokit;
 using Nuke.Common.Utilities;
 using Nuke.Common.CI.GitHubActions;
+using Project = Nuke.Common.ProjectModel.Project;
 
 [ShutdownDotNetAfterServerBuild]
 [DotNetVerbosityMapping]
@@ -302,7 +303,16 @@ partial class Build : NukeBuild
         .DependsOn(Compile)
         .Executes(() =>
         {
-            var projects = Solution.GetProjects("*.Tests");
+            IEnumerable<Project> GetProjects()
+            {
+                // if you need to filter tests by environment, do it here.
+                if(EnvironmentInfo.IsWin)
+                    return Solution.GetProjects("*.Tests");
+                else
+                    return Solution.GetProjects("*.Tests");
+            }
+
+            var projects = GetProjects();
             foreach (var project in projects)
             {
                 Information($"Running tests from {project}");

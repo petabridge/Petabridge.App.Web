@@ -19,7 +19,7 @@
     <NetCoreFramework>net6.0</NetCoreFramework>
     <NBenchVersion>1.2.2</NBenchVersion>
     <XunitVersion>2.4.1</XunitVersion>
-    <XunitRunneVisualstudio>2.4.5</XunitRunneVisualstudio>
+    <XunitRunnerVisualstudio>2.4.5</XunitRunnerVisualstudio>
     <TestSdkVersion>17.2.0</TestSdkVersion>
     <AkkaVersion>1.4.39</AkkaVersion>
     <PbmVersion>1.1.0</PbmVersion>
