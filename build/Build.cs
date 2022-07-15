@@ -25,9 +25,12 @@ using static Nuke.Common.Tools.Git.GitTasks;
 using Nuke.Common.Tools.SignClient;
 using Octokit;
 using Nuke.Common.Utilities;
+using Nuke.Common.CI.GitHubActions;
+using Project = Nuke.Common.ProjectModel.Project;
 
-[CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
+[DotNetVerbosityMapping]
+[UnsetVisualStudioEnvironmentVariables]
 partial class Build : NukeBuild
 {
     /// Support plugins are available for:
@@ -52,7 +55,6 @@ partial class Build : NukeBuild
 
     [Parameter] string SymbolsPublishUrl;
 
-    [Parameter][Secret] string GitHubToken;
     GitHubClient GitHubClient;
 
     [Parameter] string DockerRegistryUrl;
@@ -76,19 +78,21 @@ partial class Build : NukeBuild
 
     readonly Solution Solution = ProjectModelTasks.ParseSolution(RootDirectory.GlobFiles("*.sln").FirstOrDefault());
 
-    static readonly JsonElement? _githubContext = string.IsNullOrWhiteSpace(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT")) ?
-        null
-        : JsonSerializer.Deserialize<JsonElement>(EnvironmentInfo.GetVariable<string>("GITHUB_CONTEXT"));
-
-    static readonly int BuildNumber = _githubContext.HasValue ? int.Parse(_githubContext.Value.GetProperty("run_number").GetString()) : 0;
-
-    static readonly string PreReleaseVersionSuffix = "beta" + (BuildNumber > 0 ? BuildNumber : DateTime.UtcNow.Ticks.ToString());
+    GitHubActions GitHubActions => GitHubActions.Instance;
+    private long BuildNumber()
+    {
+        return GitHubActions.RunNumber;
+    }
+    private string PreReleaseVersionSuffix()
+    {
+        return "beta" + (BuildNumber() > 0 ? BuildNumber() : DateTime.UtcNow.Ticks.ToString());
+    }
     public ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     public ReleaseNotes ReleaseNotes => Changelog.ReleaseNotes.OrderByDescending(s => s.Version).FirstOrDefault() ?? throw new ArgumentException("Bad Changelog File. Version Should Exist");
 
     private string VersionFromReleaseNotes => ReleaseNotes.Version.IsPrerelease ? ReleaseNotes.Version.OriginalVersion : "";
-    private string VersionSuffix => NugetPrerelease == "dev" ? PreReleaseVersionSuffix : NugetPrerelease == "" ? VersionFromReleaseNotes : NugetPrerelease;
+    private string VersionSuffix => NugetPrerelease == "dev" ? PreReleaseVersionSuffix() : NugetPrerelease == "" ? VersionFromReleaseNotes : NugetPrerelease;
     public string ReleaseVersion => ReleaseNotes.Version?.ToString() ?? throw new ArgumentException("Bad Changelog File. Define at least one version");
 
     Target Clean => _ => _
@@ -199,8 +203,7 @@ partial class Build : NukeBuild
     .DependsOn(BuildDockerImages);
     public Target PublishDockerImages => _ => _
     .DependsOn(DockerLogin, Docker, PushImage);
-
-
+        
     Target PublishNuget => _ => _
     .Description("Publishes .nuget packages to Nuget")
     .After(CreateNuget)
@@ -239,27 +242,30 @@ partial class Build : NukeBuild
 
     Target AuthenticatedGitHubClient => _ => _
         .Unlisted()
-        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubActions.Token))
         .Executes(() =>
         {
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuke-build"))
             {
-                Credentials = new Credentials(GitHubToken, AuthenticationType.Bearer)
+                Credentials = new Credentials(GitHubActions.Token, AuthenticationType.Bearer)
             };
         });
     Target GitHubRelease => _ => _
         .Unlisted()
         .Description("Creates a GitHub release (or amends existing) and uploads the artifact")
-        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubToken))
+        .OnlyWhenDynamic(() => !string.IsNullOrWhiteSpace(GitHubActions.Token))
         .DependsOn(AuthenticatedGitHubClient)
         .Executes(async () =>
         {
             var version = ReleaseNotes.Version.ToString();
             var releaseNotes = GetNuGetReleaseNotes(ChangelogFile);
             Release release;
+
             var releaseName = $"{version}";
+
             if (!VersionSuffix.IsNullOrWhiteSpace())
                 releaseName = $"{version}-{VersionSuffix}";
+
             var identifier = GitRepository.Identifier.Split("/");
             var (gitHubOwner, repoName) = (identifier[0], identifier[1]);
             try
@@ -297,7 +303,16 @@ partial class Build : NukeBuild
         .DependsOn(Compile)
         .Executes(() =>
         {
-            var projects = Solution.GetProjects("*.Tests");
+            IEnumerable<Project> GetProjects()
+            {
+                // if you need to filter tests by environment, do it here.
+                if(EnvironmentInfo.IsWin)
+                    return Solution.GetProjects("*.Tests");
+                else
+                    return Solution.GetProjects("*.Tests");
+            }
+
+            var projects = GetProjects();
             foreach (var project in projects)
             {
                 Information($"Running tests from {project}");

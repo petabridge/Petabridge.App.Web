@@ -20,18 +20,14 @@
         },
         "DockerPassword": {
           "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
         },
         "DockerRegistryUrl": {
           "type": "string"
         },
         "DockerUsername": {
           "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
-        },
-        "GitHubToken": {
-          "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
         },
         "Help": {
           "type": "boolean",
@@ -44,6 +40,7 @@
             "AppVeyor",
             "AzurePipelines",
             "Bamboo",
+            "Bitbucket",
             "Bitrise",
             "GitHubActions",
             "GitLab",
@@ -63,7 +60,7 @@
         },
         "NugetKey": {
           "type": "string",
-          "default": "Secrets must be entered via 'nuke :secret [profile]'"
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
         },
         "NugetPrerelease": {
           "type": "string"

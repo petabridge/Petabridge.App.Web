@@ -17,7 +17,7 @@ using Nuke.Common.Utilities;
     OnPullRequestBranches = new[] { "master", "dev" },
     InvokedTargets = new[] { nameof(All) },
     PublishArtifacts = true,
-    EnableGitHubContext = true)
+    EnableGitHubToken = true)
 ]
 
 [CustomGitHubActions("Docker_build",
@@ -28,16 +28,17 @@ using Nuke.Common.Utilities;
     InvokedTargets = new[] { nameof(Docker) },
     ImportSecrets = new [] { "Docker_Username", "Docker_Password" },
     PublishArtifacts = true,
-    EnableGitHubContext = true)
+    EnableGitHubToken = true)
 ]
 [CustomGitHubActions("Windows_release",
     GitHubActionsImage.WindowsLatest,
     AutoGenerate = false,
     OnPushTags = new[] {"*" },
     InvokedTargets = new[] { nameof(Nuget) },
-    ImportSecrets = new[] { "Nuget_Key", "GITHUB_TOKEN" },
+    ImportSecrets = new[] { "Nuget_Key"},
     PublishArtifacts = true,
-    EnableGitHubContext = true)
+    EnableGitHubToken = true)
+    //
 ]
 
 partial class Build
