@@ -38,6 +38,7 @@ using Nuke.Common.Utilities;
     ImportSecrets = new[] { "Nuget_Key"},
     PublishArtifacts = true,
     EnableGitHubToken = true)
+    //
 ]
 
 partial class Build
