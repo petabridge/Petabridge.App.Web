@@ -23,7 +23,7 @@
     <TestSdkVersion>17.3.2</TestSdkVersion>
     <AkkaVersion>1.4.45</AkkaVersion>
     <PbmVersion>1.1.3</PbmVersion>
-     <AkkaHostingVersion>0.5.1</AkkaHostingVersion>
+     <AkkaHostingVersion>1.0.2</AkkaHostingVersion>
     <FluentAssertionsVersion>6.8.0</FluentAssertionsVersion>
     <MicrosoftExtensionsVersion>6.0.1</MicrosoftExtensionsVersion>
   </PropertyGroup>
