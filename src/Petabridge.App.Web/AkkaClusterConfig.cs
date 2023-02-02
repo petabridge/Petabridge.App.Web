@@ -5,11 +5,11 @@
 /// </summary>
 public class AkkaClusterConfig
 {
-    public string? ActorSystemName { get; set; }
+    public string ActorSystemName { get; set; } = "ActorSystem";
     public string? Hostname { get; set; }
     public int? Port { get;set; }
 
-    public List<string>? Roles { get; set; }
+    public string[]? Roles { get; set; } = Array.Empty<string>();
 
-    public List<string>? SeedNodes { get; set; }
+    public string[]? SeedNodes { get; set; } = Array.Empty<string>();
 }

@@ -14,7 +14,7 @@ var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables()
     .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{environment}.json");
+    .AddJsonFile($"appsettings.{environment}.json", optional:true);
 
 builder.Logging.ClearProviders().AddConsole();
 
@@ -25,12 +25,12 @@ builder.Services.AddControllers();
 builder.Services.AddAkka(akkaConfig.ActorSystemName, (builder, provider) =>
 {
     Debug.Assert(akkaConfig.Port != null, "akkaConfig.Port != null");
-    builder.AddHoconFile("app.conf")
+    builder.AddHoconFile("app.conf", HoconAddMode.Append)
         .WithRemoting(akkaConfig.Hostname, akkaConfig.Port.Value)
         .WithClustering(new ClusterOptions()
         {
-            Roles = akkaConfig.Roles?.ToArray() ?? Array.Empty<string>(),
-            SeedNodes = akkaConfig.SeedNodes?.Select(Address.Parse).ToArray() ?? Array.Empty<Address>()
+            Roles = akkaConfig.Roles,
+            SeedNodes = akkaConfig.SeedNodes
         })
         .AddPetabridgeCmd(cmd =>
         {
