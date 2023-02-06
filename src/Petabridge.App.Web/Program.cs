@@ -12,9 +12,10 @@ using Petabridge.Cmd.Remote;
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddEnvironmentVariables()
+builder.Configuration
     .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{environment}.json", optional:true);
+    .AddJsonFile($"appsettings.{environment}.json", optional:true)
+    .AddEnvironmentVariables();
 
 builder.Logging.ClearProviders().AddConsole();
 
