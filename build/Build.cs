@@ -82,7 +82,10 @@ partial class Build : NukeBuild
     GitHubActions GitHubActions => GitHubActions.Instance;
     private long BuildNumber()
     {
-        return GitHubActions.RunNumber;
+        if (GitHubActions != null!)
+            return GitHubActions.RunNumber;
+
+        return 0;
     }
     private string PreReleaseVersionSuffix()
     {
@@ -120,9 +123,9 @@ partial class Build : NukeBuild
       .DependsOn(RunTests)
       .Executes(() =>
       {
-          var version = ReleaseNotes.Version.ToString();
+          var version = Version(ReleaseNotes, NugetPrerelease);
           var releaseNotes = GetNuGetReleaseNotes(ChangelogFile, GitRepository);
-
+          var versionSuffix = VersionSuffix;
           var projects = SourceDirectory.GlobFiles("**/*.csproj")
           .Except(SourceDirectory.GlobFiles("**/*Tests.csproj", "**/*Tests*.csproj"));
           foreach (var project in projects)
@@ -437,5 +440,11 @@ Target RunTests => _ => _
     static void Information(string info)
     {
         Serilog.Log.Information(info);
+    }
+    static string Version(ReleaseNotes releaseNotes, string nugetPrerelease)
+    {
+        var version = releaseNotes.Version.ToString();
+        version = nugetPrerelease == "dev" ? version.Split('-')[0] : version;
+        return version;
     }
 }

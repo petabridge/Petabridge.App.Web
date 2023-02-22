@@ -12,17 +12,17 @@ using Nuke.Common.Utilities;
 [CustomGitHubActions("pr_validation",
     GitHubActionsImage.WindowsLatest,
     GitHubActionsImage.UbuntuLatest,
-    AutoGenerate = false,
+    AutoGenerate = true,
     OnPushBranches = new[] { "master", "dev" },
     OnPullRequestBranches = new[] { "master", "dev" },
-    InvokedTargets = new[] { nameof(All) },
+    InvokedTargets = new[] { nameof(RunTests) },
     PublishArtifacts = true,
     EnableGitHubToken = true)
 ]
 
 [CustomGitHubActions("Docker_build",
     GitHubActionsImage.UbuntuLatest,
-    AutoGenerate = false,
+    AutoGenerate = true,
     OnPushBranches = new[] { "master", "dev" },
     OnPullRequestBranches = new[] { "master", "dev" },
     InvokedTargets = new[] { nameof(Docker) },
@@ -32,7 +32,7 @@ using Nuke.Common.Utilities;
 ]
 [CustomGitHubActions("Windows_release",
     GitHubActionsImage.WindowsLatest,
-    AutoGenerate = false,
+    AutoGenerate = true,
     OnPushTags = new[] {"*" },
     InvokedTargets = new[] { nameof(Nuget) },
     ImportSecrets = new[] { "Nuget_Key"},
