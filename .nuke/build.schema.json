@@ -155,6 +155,9 @@
             ]
           }
         },
+        "TestTimeout": {
+          "type": "string"
+        },
         "Verbosity": {
           "type": "string",
           "description": "Logging verbosity during build execution. Default is 'Normal'",

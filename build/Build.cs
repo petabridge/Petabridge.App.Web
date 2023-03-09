@@ -61,6 +61,9 @@ partial class Build : NukeBuild
     [Parameter] string DockerRegistryUrl;
 
     [Parameter] int Port = 8090;
+    //usage:
+    //./build.cmd runtests --test-timeout 300s
+    [Parameter] string TestTimeout = "5m";
 
     [Parameter][Secret] string DockerUsername;
     [Parameter][Secret] string DockerPassword;
@@ -321,6 +324,9 @@ Target RunTests => _ => _
                            .SetResultsDirectory(OutputTests)
                            .SetProcessWorkingDirectory(Directory.GetParent(project).FullName)
                            .SetLoggers("trx")
+                           .SetBlameCrash(true)
+                           .SetBlameHang(true)
+                           .SetBlameHangTimeout(TestTimeout)
                            .SetVerbosity(verbosity: DotNetVerbosity.Normal)
                            .EnableNoBuild());
                 }
