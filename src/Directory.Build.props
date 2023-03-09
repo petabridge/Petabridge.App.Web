@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <Copyright>Copyright © 2022 Your Company</Copyright>
+    <Copyright>Copyright © 2023 Your Company</Copyright>
     <Authors>Your Authors</Authors>
     <VersionPrefix>0.3.0</VersionPrefix>
     <PackageReleaseNotes>• First release</PackageReleaseNotes>
