@@ -4,7 +4,7 @@
   </PropertyGroup>
   <!-- App Package Versions -->
   <ItemGroup>
-    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.1" />
+    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.4" />
     <PackageVersion Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
     <PackageVersion Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageVersion Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
