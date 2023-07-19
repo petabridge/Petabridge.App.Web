@@ -17,7 +17,7 @@
 	</ItemGroup>
   <PropertyGroup>
     <NetCoreFramework>net6.0</NetCoreFramework>
-    <PbmVersion>1.3.1</PbmVersion>
+    <PbmVersion>1.3.2</PbmVersion>
     <MicrosoftExtensionsVersion>7.0.1</MicrosoftExtensionsVersion>
   </PropertyGroup>
 </Project>
